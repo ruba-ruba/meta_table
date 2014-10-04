@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.version     = MetaTable::VERSION
   s.authors     = ["@mrybak"]
   s.email       = ["email"]
-  s.homepage    = "http://github.com"
+  s.homepage    = "https://github.com/ruba-ruba/meta_table"
   s.summary     = "MetaTable."
   s.description = "MetaTable."
   s.license     = "MIT"
