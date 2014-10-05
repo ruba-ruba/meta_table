@@ -1,8 +1,9 @@
 require "meta_table/version"
 require 'meta_table/railtie'
 require 'meta_table/model_additions' if defined?(Rails)
-require 'rails'
 require 'action_view'
+require 'action_controller'
+
 
 module MetaTable
 
@@ -12,40 +13,79 @@ module MetaTable
   # end
 
   # module ClassMethods
+    extend ActionView::Helpers::UrlHelper
     extend ActionView::Helpers::TextHelper 
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
-
-    def self.get_data options, collection
+    extend ActiveSupport::Inflector
+    
+    def self.get_data attributes, collection, actions
       hash_data = collection.map do |record|
-        options[:attributes].map do |attr|
-          if record.respond_to?(attr)
+        raw_data = attributes.map do |attr|
+          if attr.is_a?(Symbol)
             record.send attr
           else
-            get_on_relation(record, attr)
+            fetch_rely_on_hash(record, attr)
           end
         end
+        record_actions = make_record_actions(record, actions)
+        raw_data << record_actions
       end
     end
 
-    def self.get_on_relation(record, attr)
-      values = attr.values.flatten
-      key    = attr.keys.first
-      values.map do |value|
-        if ActiveRecord::Base.descendants.include?(record.send(key).class)
-          record.send(key).send(:"#{value}")
-        else
-          record.send(key).try(:map, &:"#{value}")
+    def self.guess_controller_name(record)
+      "#{record.class.to_s.underscore.pluralize}"
+    end
+
+    def self.make_record_actions(record, actions)
+      controller = guess_controller_name(record)
+      actions.map do |action|
+        if action.is_a?(Array)
+          action_name      = action[0]
+          action_namespace = action[1]
+          controller_name  = "#{action_namespace}/#{controller}"
         end
-      end.join(',')
+        controller_name ||= controller
+        action_name     ||= action
+        # binding.pry
+        route = Rails.application.routes.url_helpers.url_for({host: Rails.application.class::APP_URL,controller: controller_name, action: action_name, id: record.id})
+        link_to action_name, route
+      end.join(' ').html_safe
+    end
+
+    # def self.modify_attributes attributes
+    #   attributes.inject([]) do |ary, attribute|
+    #     ary << (needs_perform?(attribute) ? modify_attribute(attribute) : attribute)
+    #   end.flatten
+    # end
+
+    # def self.needs_perform?(attribute)
+    #   attribute.kind_of?(Hash)
+    # end
+
+    # def self.modify_attribute(attribute)
+    #   attribute # not implemented yet
+    # end
+
+    def self.fetch_rely_on_hash(record, attribute)
+      attr = attribute[:key]
+      relation = record.send(attr)
+      method   = attribute[:method]
+      if method && ActiveRecord::Base.descendants.include?(relation.class)
+        relation.send(:"#{method}")
+      else
+        relation
+      end
     end
 
     def self.render_table klass, options
-      attributes = options[:attributes]
-      actions    = options[:actions]
-      collection = klass.all
-      hash_data  = get_data(options, collection)
-      content    = (render_top_header(actions) + render_data_table(attributes, hash_data))
+      attributes    = options[:attributes] # modify_attributes(options[:attributes])
+      relations     = nil # not implemented yet
+      table_actions = options[:actions]
+      top_actions   = options[:top_actions] # not implemented
+      collection    = klass.all
+      hash_data     = get_data(attributes, collection, table_actions)
+      content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions))
       wrap_all(content)
     end
 
@@ -55,9 +95,9 @@ module MetaTable
       end
     end
 
-    def self.render_data_table(attributes, hash_data)
+    def self.render_data_table(attributes, hash_data, table_actions)
       content_tag(:table, nil, class: "data_table") do
-        render_table_header(attributes) + render_table_data(hash_data)
+        render_table_header(attributes, table_actions) + render_table_data(hash_data)
       end
     end
 
@@ -85,7 +125,7 @@ module MetaTable
       case klass
       when String
         attribute
-      when Array || Fixnum
+      when Array || Fixnum || Symbol
         attribute.to_s
       when TrueClass
         'yes'
@@ -93,14 +133,21 @@ module MetaTable
         'no'
       when NilClass
         ''
-      when Hash
-        attribute.keys.first
       else
-        attribute.to_s
+        if klass == Hash
+          render_table_header_attribute(attribute)
+        else
+          attribute.to_s
+        end
       end
     end
 
-    def self.render_table_header attributes
+    def self.render_table_header_attribute(attribute)
+      attribute[:label].presence || "#{attribute[:key]} - #{attribute[:method]}"
+    end
+
+    def self.render_table_header attributes, table_actions
+      attributes << "Actions" if table_actions.present? && table_actions.any?
       concat(content_tag(:thead, nil) do  
         concat(content_tag(:tr, nil) do
           attributes.map do |attribute|
