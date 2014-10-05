@@ -6,6 +6,8 @@ require 'action_controller'
 
 
 module MetaTable
+  class Engine < ::Rails::Engine
+  end
 
   # def self.included(base)
   #   base.extend(ClassMethods)
