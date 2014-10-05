@@ -30,8 +30,8 @@ module MetaTable
             fetch_rely_on_hash(record, attr)
           end
         end
-        record_actions = make_record_actions(record, actions)
-        raw_data << record_actions
+        raw_data << make_record_actions(record, actions) if actions.present?
+        raw_data
       end
     end
 
@@ -89,10 +89,19 @@ module MetaTable
       relations     = nil # not implemented yet
       table_actions = options[:actions]
       top_actions   = options[:top_actions] # not implemented
-      collection    = klass.all
+      table_options = options[:table_options]
+      collection    = get_collection(klass, options[:table_options])
       hash_data     = get_data(attributes, collection, table_actions)
       content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions))
       wrap_all(content)
+    end
+
+    def self.get_collection(klass,table_options)
+      if table_options && scope = table_options[:scope]
+        eval "klass.#{scope}" # TODO: rework this 
+      else
+        klass.all
+      end
     end
 
     def self.wrap_all(content)
