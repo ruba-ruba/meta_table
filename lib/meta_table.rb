@@ -13,11 +13,11 @@ module MetaTable
   # end
 
   # module ClassMethods
+    extend ActiveSupport::Inflector
     extend ActionView::Helpers::UrlHelper
     extend ActionView::Helpers::TextHelper 
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
-    extend ActiveSupport::Inflector
     
     def self.get_data attributes, collection, actions
       hash_data = collection.map do |record|
@@ -42,14 +42,18 @@ module MetaTable
       actions.map do |action|
         if action.is_a?(Array)
           action_name      = action[0]
-          action_namespace = action[1]
-          controller_name  = "#{action_namespace}/#{controller}"
+          namespace = action[1]
+          controller_name  = "#{namespace}/#{controller}"
         end
         controller_name ||= controller
         action_name     ||= action
         # binding.pry
         route = Rails.application.routes.url_helpers.url_for({host: Rails.application.class::APP_URL,controller: controller_name, action: action_name, id: record.id})
-        link_to action_name, route
+        if action_name == :destroy
+          link_to action_name, route, method: :delete, data: {:confirm => 'Are you sure?'}
+        else
+          link_to action_name, route
+        end
       end.join(' ').html_safe
     end
 
@@ -121,24 +125,22 @@ module MetaTable
     end
 
     def self.render_attribute(attribute)
-      klass = attribute.class
+      klass = attribute.class.to_s
       case klass
-      when String
+      when 'String'
         attribute
-      when Array || Fixnum || Symbol
+      when 'Array' || 'Fixnum' || 'Symbol'
         attribute.to_s
-      when TrueClass
+      when 'TrueClass'
         'yes'
-      when FalseClass
+      when 'FalseClass'
         'no'
-      when NilClass
+      when 'NilClass'
         ''
+      when 'Hash'
+        render_table_header_attribute(attribute)
       else
-        if klass == Hash
-          render_table_header_attribute(attribute)
-        else
-          attribute.to_s
-        end
+        attribute.to_s
       end
     end
 
