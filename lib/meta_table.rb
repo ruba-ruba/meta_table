@@ -1,6 +1,7 @@
 require "meta_table/version"
 require 'meta_table/railtie'
 require 'meta_table/model_additions' if defined?(Rails)
+require 'meta_table/controller_additions' if defined?(Rails)
 require 'action_view'
 require 'action_controller'
 
@@ -84,23 +85,24 @@ module MetaTable
       end
     end
 
-    def self.render_table klass, options
+    def self.render_table controller=nil, klass, options
       attributes    = options[:attributes] # modify_attributes(options[:attributes])
       relations     = nil # not implemented yet
       table_actions = options[:actions]
       top_actions   = options[:top_actions] # not implemented
       table_options = options[:table_options]
-      collection    = get_collection(klass, options[:table_options])
+      collection    = get_collection(controller, klass, options[:table_options])
       hash_data     = get_data(attributes, collection, table_actions)
-      content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions))
+      content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions) + render_table_footer)
       wrap_all(content)
     end
 
-    def self.get_collection(klass,table_options)
+    def self.get_collection(controller, klass,table_options)
+      page = controller.params[:page] || 1
       if table_options && scope = table_options[:scope]
         eval "klass.#{scope}" # TODO: rework this 
       else
-        klass.all
+        klass.page(page).per(4)
       end
     end
 
@@ -118,6 +120,11 @@ module MetaTable
 
     def self.render_top_header actions
       content_tag(:div, nil, class: 'top_header_wrapper') do
+      end
+    end
+
+    def self.render_table_footer
+      content_tag(:div, nil, class: 'table_footer') do
       end
     end
 
