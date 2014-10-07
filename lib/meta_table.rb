@@ -21,7 +21,26 @@ module MetaTable
     extend ActionView::Helpers::TextHelper 
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
-    
+
+    @@hostname   ||= 'localhost'
+    @@controller ||= {}
+
+    def self.reset_hostname
+      @@hostname = self.controller.request.host_with_port if self.hostname != self.controller.request.host_with_port
+    end
+
+    def self.hostname
+      @@hostname
+    end
+
+    def self.controller
+      @@controller
+    end
+
+    def self.set_controller controller
+      @@controller = controller
+    end
+
     def self.get_data attributes, collection, actions
       hash_data = collection.map do |record|
         raw_data = attributes.map do |attr|
@@ -50,8 +69,7 @@ module MetaTable
         end
         controller_name ||= controller
         action_name     ||= action
-        # binding.pry
-        route = Rails.application.routes.url_helpers.url_for({host: Rails.application.class::APP_URL,controller: controller_name, action: action_name, id: record.id})
+        route = Rails.application.routes.url_helpers.url_for({host: self.hostname ,controller: controller_name, action: action_name, id: record.id})
         if action_name == :destroy
           link_to action_name, route, method: :delete, data: {:confirm => 'Are you sure?'}
         else
@@ -60,19 +78,22 @@ module MetaTable
       end.join(' ').html_safe
     end
 
-    # def self.modify_attributes attributes
-    #   attributes.inject([]) do |ary, attribute|
-    #     ary << (needs_perform?(attribute) ? modify_attribute(attribute) : attribute)
-    #   end.flatten
-    # end
 
-    # def self.needs_perform?(attribute)
-    #   attribute.kind_of?(Hash)
-    # end
+  # should be used for habtm hm hmt relations
 
-    # def self.modify_attribute(attribute)
-    #   attribute # not implemented yet
-    # end
+            # def self.modify_attributes attributes
+            #   attributes.inject([]) do |ary, attribute|
+            #     ary << (needs_perform?(attribute) ? modify_attribute(attribute) : attribute)
+            #   end.flatten
+            # end
+
+            # def self.needs_perform?(attribute)
+            #   attribute.kind_of?(Hash)
+            # end
+
+            # def self.modify_attribute(attribute)
+            #   attribute # not implemented yet
+            # end
 
     def self.fetch_rely_on_hash(record, attribute)
       attr = attribute[:key]
@@ -85,24 +106,26 @@ module MetaTable
       end
     end
 
-    def self.render_table controller=nil, klass, options
+    def self.render_table controller, klass, options
+      self.set_controller(controller)
+      self.reset_hostname
       attributes    = options[:attributes] # modify_attributes(options[:attributes])
       relations     = nil # not implemented yet
       table_actions = options[:actions]
       top_actions   = options[:top_actions] # not implemented
       table_options = options[:table_options]
-      collection    = get_collection(controller, klass, options[:table_options])
+      collection    = get_collection(klass, options[:table_options])
       hash_data     = get_data(attributes, collection, table_actions)
       content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions) + render_table_footer)
       wrap_all(content)
     end
 
-    def self.get_collection(controller, klass,table_options)
-      page = controller.params[:page] || 1
+    def self.get_collection(klass, table_options)
+      page = self.controller.params[:page] || 1
       if table_options && scope = table_options[:scope]
-        eval "klass.#{scope}" # TODO: rework this 
+        eval "klass.#{scope}.page(page).per(3)" # TODO: rework this 
       else
-        klass.page(page).per(4)
+        klass.page(page).per(3)
       end
     end
 
@@ -125,7 +148,30 @@ module MetaTable
 
     def self.render_table_footer
       content_tag(:div, nil, class: 'table_footer') do
+        render_pagination
       end
+    end
+
+    def self.render_pagination
+      current_url = self.controller.request.url
+      current_page = self.controller.params[:page] || 1
+      url_wih_page = if current_url.match('page=\d')
+        current_url.gsub(/page=\d/, "page=#{current_page}")
+      else
+        "#{current_url}?page=#{current_page}"
+      end
+      links = []
+      next_page = link_to 'next_page', url_wih_page.gsub(/page=\d/, "page=#{current_page.to_i+1}")
+      links << next_page
+      prev_page = link_to 'prev_page', url_wih_page.gsub(/page=\d/, "page=#{current_page.to_i-1}") if current_page.to_i != 1
+      links << prev_page
+      render_links(links)
+    end
+
+    def self.render_links(links)
+      links.map do |link|
+        link
+      end.join(' ').html_safe
     end
 
     def self.render_table_data hash_data
