@@ -20,6 +20,8 @@ module MetaTable
       current_page = collection.current_page
       url_wih_page = if current_url.match('page=\d')
         current_url.gsub(/page=\d/, "page=#{current_page}")
+      elsif current_url.match('\?\w')
+        "#{current_url}&page=#{current_page}"
       else
         "#{current_url}?page=#{current_page}"
       end
@@ -30,7 +32,7 @@ module MetaTable
       links = []
       # binding.pry
       first_page = link_to 'first page', format_link_url(url_wih_page, 1) unless collection.first_page? 
-      prev_page  = link_to "#{current_page.to_i-1}", format_link_url(url_wih_page,current_page.to_i-1) unless collection.first_page?
+      prev_page  = link_to "#{current_page.to_i-1}", format_link_url(url_wih_page,current_page.to_i-1) if !collection.first_page? && current_page.to_i-1 <= 0 
       current    = "#{current_page}"
       next_page  = link_to "#{current_page.to_i+1}", format_link_url(url_wih_page,collection.next_page) if collection.next_page && current_page.to_i+1 < collection.num_pages
       last_page  = link_to "last page", format_link_url(url_wih_page,collection.num_pages) unless collection.last_page?

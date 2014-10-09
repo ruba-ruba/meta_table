@@ -128,12 +128,22 @@ module MetaTable
     end
 
     def self.initialize_collection(klass, table_options)
-      page = self.controller.params[:page] || 1
-      @@collection = if table_options && scope = table_options[:scope]
-        eval "klass.#{scope}.page(page).per(3)" # TODO: rework this 
+      page = controller.params[:page] || 1
+      order_column = controller.params[:sort_by]
+      order_direction = controller.params[:order]
+      order = "#{order_column} #{order_direction}"
+      # binding.pry\
+      per_page = (table_options && table_options[:per_page]) || 10
+      scope = ""
+      scope << table_options[:scope] if table_options[:scope].present?
+      scope << "." if controller.params[:sort_by].present? && table_options[:scope].present?
+      scope << "order('#{order}')" if order.strip.present?
+      collection = if scope.present?
+        eval "klass.#{scope}.page(page).per(#{per_page})"
       else
-        klass.page(page).per(3)
+        klass.page(page).per(per_page)
       end
+      @@collection = collection
     end
 
     def self.wrap_all(content)
@@ -188,14 +198,33 @@ module MetaTable
       when 'NilClass'
         ''
       when 'Hash'
-        render_table_header_attribute(attribute)
+        render_table_header_attribute_from_hash(attribute)
       else
         attribute.to_s
       end
     end
 
-    def self.render_table_header_attribute(attribute)
-      attribute[:label].presence || "#{attribute[:key]} - #{attribute[:method]}"
+    def self.render_table_header_attribute_from_hash(attribute)
+      attribute_name = attribute[:label].presence || "#{attribute[:key]} - #{attribute[:method]}"
+      if attribute[:sortable] == true
+        link_to attribute_name, format_link_with_sortble(attribute)
+      else
+        attribute_name
+      end
+    end
+
+    def self.format_link_with_sortble(attribute)
+      attribute_name = attribute[:label].presence || "#{attribute[:key]} - #{attribute[:method]}"
+      current_url = controller.request.url
+      # binding.pry 
+      direction = current_url.match(/sort_by=\w{1,}&order=desc/).present? ? 'asc' : 'desc'
+      if current_url.match('sort_by=\w')
+        current_url.gsub(/sort_by=\w{1,}\&order=(asc|desc)/, "sort_by=#{attribute[:key]}&order=#{direction}")
+      elsif current_url.match('\?\w')
+        "#{current_url}&sort_by=#{attribute[:key]}&order=#{direction}"
+      else
+        "#{current_url}?sort_by=#{attribute[:key]}&order=#{direction}"
+      end
     end
 
     def self.render_table_header attributes, table_actions
