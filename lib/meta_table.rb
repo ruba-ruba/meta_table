@@ -24,29 +24,9 @@ module MetaTable
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
 
-    @@hostname   ||= 'localhost'
-    @@controller ||= {}
-    @@collection ||= []
-
-    def self.reset_hostname
-      @@hostname = self.controller.request.host_with_port if self.hostname != self.controller.request.host_with_port
-    end
-
-    def self.hostname
-      @@hostname
-    end
-
-    def self.controller
-      @@controller
-    end
-
-    def self.collection
-      @@collection
-    end
-
-    def self.set_controller controller
-      @@controller = controller
-    end
+    mattr_accessor :hostname
+    mattr_accessor :controller
+    mattr_accessor :collection
 
     def self.get_data attributes, actions
       hash_data = collection.map do |record|
@@ -114,9 +94,9 @@ module MetaTable
     end
 
     def self.render_table controller, klass, options
-      set_controller(controller)
-      reset_hostname
-      initialize_collection(klass, options[:table_options])
+      MetaTable.controller = controller
+      MetaTable.collection = initialize_collection(klass, options[:table_options])
+      MetaTable.hostname   = controller.request.host_with_port
       attributes    = options[:attributes] # modify_attributes(options[:attributes])
       relations     = nil # not implemented yet
       table_actions = options[:actions]
