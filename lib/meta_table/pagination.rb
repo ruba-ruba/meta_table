@@ -18,8 +18,9 @@ module MetaTable
     def self.render_pagination
       current_url = controller.request.url
       current_page = collection.current_page
-      url_wih_page = if current_url.match('page=\d')
-        current_url.gsub(/page=\d/, "page=#{current_page}")
+      # binding.pry
+      url_wih_page = if current_url.match(/page=\d{1,}/)
+        current_url.gsub(/page=\d{1,}/, "page=#{current_page}")
       elsif current_url.match('\?\w')
         "#{current_url}&page=#{current_page}"
       else
@@ -41,7 +42,7 @@ module MetaTable
     end
 
     def self.format_link_url url_wih_page, page_number
-      url_wih_page.gsub(/page=\d/, "page=#{page_number}")
+      url_wih_page.gsub(/page=\d{1,}/, "page=#{page_number}")
     end
 
     def self.render_links(links)

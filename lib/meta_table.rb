@@ -115,7 +115,7 @@ module MetaTable
       # binding.pry\
       per_page = (table_options && table_options[:per_page]) || 10
       scope = ""
-      scope << table_options[:scope] if table_options[:scope].present?
+      scope << table_options[:scope] if table_options && table_options[:scope].present?
       scope << "." if controller.params[:sort_by].present? && table_options[:scope].present?
       scope << "order('#{order}')" if order.strip.present?
       collection = if scope.present?
@@ -176,7 +176,7 @@ module MetaTable
       when 'FalseClass'
         'no'
       when 'NilClass'
-        ''
+        nil
       when 'Hash'
         render_table_header_attribute_from_hash(attribute)
       else
@@ -185,7 +185,7 @@ module MetaTable
     end
 
     def self.render_table_header_attribute_from_hash(attribute)
-      attribute_name = attribute[:label].presence || "#{attribute[:key]} - #{attribute[:method]}"
+      attribute_name = header_attribute_name(attribute)
       if attribute[:sortable] == true
         link_to attribute_name, format_link_with_sortble(attribute)
       else
@@ -193,13 +193,17 @@ module MetaTable
       end
     end
 
+    def self.header_attribute_name(attribute)
+      attribute[:label].presence || (attribute[:method].present? ? "#{attribute[:key].to_s.humanize} - #{attribute[:method]}" : attribute[:key].to_s.humanize)
+    end
+
     def self.format_link_with_sortble(attribute)
-      attribute_name = attribute[:label].presence || "#{attribute[:key]} - #{attribute[:method]}"
+      attribute_name = header_attribute_name(attribute)
       current_url = controller.request.url
       # binding.pry 
-      direction = current_url.match(/sort_by=\w{1,}&order=desc/).present? ? 'asc' : 'desc'
+      direction = current_url.match(/sort_by=\w{1,}&\w{1,}=desc/).present? ? 'asc' : 'desc'
       if current_url.match('sort_by=\w')
-        current_url.gsub(/sort_by=\w{1,}\&order=(asc|desc)/, "sort_by=#{attribute[:key]}&order=#{direction}")
+        current_url.gsub(/sort_by=\w{1,}\&\w{1,}=(asc|desc)/, "sort_by=#{attribute[:key]}&order=#{direction}")
       elsif current_url.match('\?\w')
         "#{current_url}&sort_by=#{attribute[:key]}&order=#{direction}"
       else
