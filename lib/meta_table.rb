@@ -29,7 +29,7 @@ module MetaTable
     mattr_accessor :collection
 
     def self.get_data attributes, actions
-      hash_data = collection.map do |record|
+      collection.map do |record|
         raw_data = attributes.map do |attr|
           if attr.is_a?(Symbol)
             record.send attr
@@ -88,8 +88,20 @@ module MetaTable
       method   = attribute[:method]
       if method && ActiveRecord::Base.descendants.include?(relation.class)
         relation.send(:"#{method}")
+      elsif attribute[:render_text]
+        implicit_render(record, attribute)
       else
         relation
+      end
+    end
+
+    def self.implicit_render(record, attribute)
+      attr = attribute[:key]
+      renderer = attribute[:render_text]
+      if renderer.is_a? String
+        eval(renderer.gsub('value', "record.#{attr}"))
+      else
+        renderer
       end
     end
 
