@@ -4,6 +4,7 @@ require 'meta_table/model_additions' if defined?(Rails)
 require 'meta_table/controller_additions' if defined?(Rails)
 require 'action_view'
 require 'action_controller'
+require 'erb'
 
 require 'meta_table/pagination'
 
@@ -23,6 +24,7 @@ module MetaTable
     extend ActionView::Helpers::TextHelper 
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
+
 
     mattr_accessor :hostname
     mattr_accessor :controller
@@ -98,11 +100,22 @@ module MetaTable
     def self.implicit_render(record, attribute)
       attr = attribute[:key]
       renderer = attribute[:render_text]
-      if renderer.is_a? String
+      if erb?(renderer)
+        render_erb(record, attribute)
+      elsif renderer.is_a? String
         eval(renderer.gsub('value', "record.#{attr}"))
       else
         renderer
       end
+    end
+
+    def self.erb?(string)
+      string.strip.start_with?('<%')
+    end
+
+    def self.render_erb(record, attribute)
+      str = attribute[:render_text].gsub('value', "record")
+      controller.make_erb(record,str)
     end
 
     def self.render_table controller, klass, options
@@ -234,6 +247,7 @@ module MetaTable
           end
         end)
       end)
+      attributes.delete("Actions") # rework this
     end
 
   # end
