@@ -10,10 +10,11 @@ Example Usage
 ```ruby
 # post.rb
 
-  POST_TABLE_OPTS  = [Post, attributes: [{key: :id, label: 'Number', sortable: true}, {key: :title, sortable: true}, {key: :published, label: 'Shown?'}, {key: :content, render_text: 'value.html_safe'}, :views_count, :content_type, :tag_list, {key: :user, method: :email, label: "Created By Email"}], 
+  POST_TABLE_OPTS  = { attributes: [{key: :id, label: 'Number', sortable: true}, {key: :title, sortable: true}, {key: :published, label: 'Shown?'}, {key: :content, render_text: 'value.html_safe'}, :views_count, :content_type, :tag_list, {key: :user, method: :email, label: "Created By Email"}], 
                             relations: [{:hubs => [:title, :published]}, {:user => [:email]} ], 
                             actions: [:show, [:edit, :admin], [:destroy, :admin]],
-                            table_options: {:scope => nil, per_page: 4}]
+                            table_options: {:scope => nil, per_page: 4}
+                      }
 
 # posts_controller 
    def index
@@ -31,10 +32,13 @@ and then in 'posts/index.html.erb'
 ## Basic Explanation
 
 ```ruby
-OPTIONS = [CLASS_NAME, attributes: [attributes_array]]
+OPTIONS = { attributes: [attributes array]
+            actions: [actions in table]
+            table_options: {:scope => symbol or string as scope chain, per_page: per_page}
+          }
 ```
 
-pass only symbols to get raw data 
+pass only symbols to get raw data
 
 ```ruby
 ... attributes: [:email, :name, :your_method/column_name] 

@@ -49,16 +49,16 @@ module MetaTable
     end
 
     def self.make_record_actions(record, actions)
-      controller = guess_controller_name(record)
+      controller_name = guess_controller_name(record)
       actions.map do |action|
         if action.is_a?(Array)
           action_name     = action[0]
           namespace       = action[1]
-          controller_name = "#{namespace}/#{controller}"
+          controller_with_namespace = "#{namespace}/#{controller_name}"
         end
-        controller_name ||= controller
-        action_name     ||= action
-        route = Rails.application.routes.url_helpers.url_for({host: self.hostname ,controller: controller_name, action: action_name, id: record.id})
+        controller_with_namespace ||= controller_name
+        action_name ||= action
+        route = Rails.application.routes.url_helpers.url_for({host: hostname ,controller: controller_with_namespace, action: action_name, id: record.id})
         if action_name == :destroy
           link_to action_name, route, method: :delete, data: {:confirm => 'Are you sure?'}
         else

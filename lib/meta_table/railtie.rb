@@ -11,6 +11,12 @@ module MetaTable
         extend  MetaTable::ControllerAdditions
       end
     end
+    initializer "meta_table.controller_additions" do
+      ActiveSupport.on_load :action_view do
+        include MetaTable::ViewAdditions # ActiveSupport::Concern
+        extend  MetaTable::ViewAdditions
+      end
+    end
   end
 end
 

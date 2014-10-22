@@ -1,9 +1,7 @@
 module MetaTable
   module ControllerAdditions
     def render_meta_table(options)
-      klass   = options[0]
-      options = options[1]
-      MetaTable.render_table(self, klass, options)
+      MetaTable.render_table(self, self.resource_class, options)
     end
 
 
@@ -26,5 +24,20 @@ module MetaTable
         binding.pry
       end
     end 
+  end
+
+  module ViewAdditions
+    
+    module InstanceMethods
+    end
+    
+    def self.included(base)
+      # base.extend         ClassMethods
+      base.send :include, InstanceMethods
+      base.class_eval do
+        def from_view
+        end
+      end
+    end
   end
 end
