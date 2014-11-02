@@ -1,7 +1,7 @@
 module MetaTable
   module ControllerAdditions
     def render_meta_table(options)
-      MetaTable.render_table(self, self.resource_class, options)
+      MetaTable.initialize_meta(self, self.resource_class, options)
     end
 
 
@@ -11,6 +11,7 @@ module MetaTable
       base.include ActionView::Helpers::UrlHelper
       base.include ActionView::Helpers::TagHelper
       base.include ActionView::Context
+      base.include ActionView::Helpers::AssetTagHelper 
       
       base.class_eval do
         def make_erb(record,str)
@@ -22,6 +23,7 @@ module MetaTable
     class ActionController::Base    
       def self.from_controller(klass, options={}, &block)
         binding.pry
+        p 'i\'ve opened this class'
       end
     end 
   end

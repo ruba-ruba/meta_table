@@ -10,11 +10,10 @@ Example Usage
 ```ruby
 # post.rb
 
-  POST_TABLE_OPTS  = { attributes: [{key: :id, label: 'Number', sortable: true}, {key: :title, sortable: true}, {key: :published, label: 'Shown?'}, {key: :content, render_text: 'value.html_safe'}, :views_count, :content_type, :tag_list, {key: :user, method: :email, label: "Created By Email"}], 
-                            relations: [{:hubs => [:title, :published]}, {:user => [:email]} ], 
-                            actions: [:show, [:edit, :admin], [:destroy, :admin]],
-                            table_options: {:scope => nil, per_page: 4}
-                      }
+    POST_TABLE_OPTS  = {attributes: [{key: :id, label: 'Number', sortable: true}, {key: :logo, label: 'Preview', render_text: "<%= image_tag(value.logo, style:'height: 100px;width:100px;') %>"}, {key: :title, sortable: true}, {key: :published, label: 'Shown?'}, {key: :content, render_text: "<%= link_to 'just do it', post_path(record) %>"}, :views_count, {key: :content_type, render_text: "record.content_type"}, :tag_list, {key: :user, method: :email, label: "Created By Email"}],
+                        actions: [:show, [:edit, :admin], [:destroy, :admin], "<%= link_to record.title, post_path(record) %>"],
+                       table_options: {:scope => nil, per_page: 4}
+                        }
 
 # posts_controller 
    def index
@@ -38,6 +37,16 @@ OPTIONS = { attributes: [attributes array]
           }
 ```
 
+actions detailed:
+
+```ruby
+actions: [:show, [:destroy, :admin], "<%= link_to record.title, your_path(record) %>"]
+
+# :show               generates record show path
+# [:edit, :namespace] generates record edit path with namespace
+# "<%= your code here  %>" anything which works inside your app
+```
+
 pass only symbols to get raw data
 
 ```ruby
@@ -55,8 +64,6 @@ use hash syntax to specify more details
 # sortable :    makes column sortable
 # render_text:  execute your code with each record. value is keyword that means record in database     -> no rescue here yet
 ```
-
-
 
 
 

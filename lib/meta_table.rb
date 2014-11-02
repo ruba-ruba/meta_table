@@ -25,10 +25,10 @@ module MetaTable
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
 
-
     mattr_accessor :hostname
     mattr_accessor :controller
     mattr_accessor :collection
+    mattr_accessor :table_options
 
     def self.get_data attributes, actions
       collection.map do |record|
@@ -44,45 +44,25 @@ module MetaTable
       end
     end
 
-    def self.guess_controller_name(record)
-      "#{record.class.to_s.underscore.pluralize}"
-    end
-
     def self.make_record_actions(record, actions)
-      controller_name = guess_controller_name(record)
       actions.map do |action|
         if action.is_a?(Array)
           action_name     = action[0]
           namespace       = action[1]
-          controller_with_namespace = "#{namespace}/#{controller_name}"
-        end
-        controller_with_namespace ||= controller_name
+          controller_with_namespace = "#{namespace}/#{controller.controller_name}"
+        end  
+        controller_with_namespace ||= controller.controller_name
         action_name ||= action
-        route = Rails.application.routes.url_helpers.url_for({host: hostname ,controller: controller_with_namespace, action: action_name, id: record.id})
+        route = Rails.application.routes.url_helpers.url_for({host: hostname ,controller: controller_with_namespace, action: action_name, id: record.id}) rescue nil
         if action_name == :destroy
           link_to action_name, route, method: :delete, data: {:confirm => 'Are you sure?'}
+        elsif action.is_a?(String)
+          controller.make_erb(record, action)
         else
           link_to action_name, route
         end
       end.join(' ').html_safe
     end
-
-
-  # should be used for habtm hm hmt relations
-
-            # def self.modify_attributes attributes
-            #   attributes.inject([]) do |ary, attribute|
-            #     ary << (needs_perform?(attribute) ? modify_attribute(attribute) : attribute)
-            #   end.flatten
-            # end
-
-            # def self.needs_perform?(attribute)
-            #   attribute.kind_of?(Hash)
-            # end
-
-            # def self.modify_attribute(attribute)
-            #   attribute # not implemented yet
-            # end
 
     def self.fetch_rely_on_hash(record, attribute)
       attr = attribute[:key]
@@ -97,13 +77,14 @@ module MetaTable
       end
     end
 
+    # i suppose this shit should care about strings
     def self.implicit_render(record, attribute)
       attr = attribute[:key]
       renderer = attribute[:render_text]
       if erb?(renderer)
         render_erb(record, attribute)
       elsif renderer.is_a? String
-        eval(renderer.gsub('value', "record.#{attr}"))
+        eval(renderer)
       else
         renderer
       end
@@ -118,29 +99,27 @@ module MetaTable
       controller.make_erb(record,str)
     end
 
-    def self.render_table controller, klass, options
-      MetaTable.controller = controller
-      MetaTable.collection = initialize_collection(klass, options[:table_options])
-      MetaTable.hostname   = controller.request.host_with_port
+    def self.initialize_meta controller, klass, options
+      MetaTable.controller    = controller
+      MetaTable.table_options = options[:table_options] || {}
+      MetaTable.collection    = initialize_collection(klass)
+      MetaTable.hostname      = controller.request.host_with_port
       attributes    = options[:attributes] # modify_attributes(options[:attributes])
-      relations     = nil # not implemented yet
       table_actions = options[:actions]
       top_actions   = options[:top_actions] # not implemented
-      table_options = options[:table_options]
       hash_data     = get_data(attributes, table_actions)
       content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions) + render_table_footer)
       wrap_all(content)
     end
 
-    def self.initialize_collection(klass, table_options)
+    def self.initialize_collection(klass)
       page = controller.params[:page] || 1
       order_column = controller.params[:sort_by]
       order_direction = controller.params[:order]
       order = "#{order_column} #{order_direction}"
-      # binding.pry\
-      per_page = (table_options && table_options[:per_page]) || 10
+      per_page = table_options[:per_page] || 10
       scope = ""
-      scope << table_options[:scope] if table_options && table_options[:scope].present?
+      scope << table_options[:scope] if table_options[:scope].present?
       scope << "." if controller.params[:sort_by].present? && table_options[:scope].present?
       scope << "order('#{order}')" if order.strip.present?
       collection = if scope.present?
@@ -148,7 +127,6 @@ module MetaTable
       else
         klass.page(page).per(per_page)
       end
-      @@collection = collection
     end
 
     def self.wrap_all(content)
@@ -163,7 +141,7 @@ module MetaTable
       end
     end
 
-    def self.render_top_header actions
+    def self.render_top_header top_actions
       content_tag(:div, nil, class: 'top_header_wrapper') do
       end
     end
