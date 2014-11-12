@@ -118,15 +118,14 @@ module MetaTable
       order_direction = controller.params[:order]
       order = "#{order_column} #{order_direction}"
       per_page = table_options[:per_page] || 10
-      scope = ""
-      scope << table_options[:scope] if table_options[:scope].present?
-      scope << "." if controller.params[:sort_by].present? && table_options[:scope].present?
-      scope << "order('#{order}')" if order.strip.present?
-      collection = if scope.present?
-        eval "klass.#{scope}.page(page).per(#{per_page})"
-      else
-        klass.page(page).per(per_page)
+      scoped = klass.all
+      if table_options[:scope]
+        table_options[:scope].to_s.split('.').each do |chain|
+          scoped = eval "scoped.#{chain}"
+        end
       end
+      scoped = eval("scoped.order('#{order}')") if order.strip.present? && ['asc', 'desc'].include?(order_direction)
+      collection = scoped.page(page).per(per_page)
     end
 
     def self.wrap_all(content)
@@ -143,6 +142,13 @@ module MetaTable
 
     def self.render_top_header top_actions
       content_tag(:div, nil, class: 'top_header_wrapper') do
+        concat(render_simple_search)
+      end
+    end
+
+    def self.render_simple_search
+      content_tag(:form, :method => 'get') do
+        concat(controller.make_erb nil, "<%= text_field_tag :search, controller.params[:search] %>")
       end
     end
 
@@ -168,12 +174,13 @@ module MetaTable
     end
 
     def self.render_attribute(attribute)
-      klass = attribute.class.to_s
-      case klass
+      case attribute.class.to_s
       when 'String'
         attribute
-      when 'Array' || 'Fixnum' || 'Symbol'
+      when 'Array' || 'Fixnum'
         attribute.to_s
+      when 'Symbol' # this is part of header's => => => remove this to separate method
+        attribute.to_s.try(:humanize)
       when 'TrueClass'
         'yes'
       when 'FalseClass'
@@ -197,13 +204,20 @@ module MetaTable
     end
 
     def self.header_attribute_name(attribute)
-      attribute[:label].presence || (attribute[:method].present? ? "#{attribute[:key].to_s.humanize} - #{attribute[:method]}" : attribute[:key].to_s.humanize)
+      if attribute[:label].present?
+        attribute[:label]
+      elsif attribute[:key].present? && attribute[:method].present?
+        "#{attribute[:key].to_s.humanize} - #{attribute[:method]}"
+      elsif attribute[:key].present?
+        attribute[:key].to_s.humanize
+      else
+        attribute.to_s.try(:humanize)
+      end   
     end
 
     def self.format_link_with_sortble(attribute)
       attribute_name = header_attribute_name(attribute)
       current_url = controller.request.url
-      # binding.pry 
       direction = current_url.match(/sort_by=\w{1,}&\w{1,}=desc/).present? ? 'asc' : 'desc'
       if current_url.match('sort_by=\w')
         current_url.gsub(/sort_by=\w{1,}\&\w{1,}=(asc|desc)/, "sort_by=#{attribute[:key]}&order=#{direction}")

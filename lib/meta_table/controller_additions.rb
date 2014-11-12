@@ -12,6 +12,7 @@ module MetaTable
       base.include ActionView::Helpers::TagHelper
       base.include ActionView::Context
       base.include ActionView::Helpers::AssetTagHelper 
+      base.include ActionView::Helpers::FormTagHelper
       
       base.class_eval do
         def make_erb(record,str)
