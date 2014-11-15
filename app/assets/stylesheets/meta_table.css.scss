@@ -5,6 +5,10 @@
   .top_header_wrapper{
     width: 100%;
     margin: 0;
+    #meta_table_search_form{
+      width: 20%;
+      float: right;
+    }
   }
   table{
     border: none;

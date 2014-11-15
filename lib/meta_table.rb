@@ -25,9 +25,11 @@ module MetaTable
     extend ActionView::Helpers::TagHelper
     extend ActionView::Context
 
+    mattr_accessor :klass
     mattr_accessor :hostname
     mattr_accessor :controller
     mattr_accessor :collection
+    mattr_accessor :model_options
     mattr_accessor :table_options
 
     def self.get_data attributes, actions
@@ -100,9 +102,11 @@ module MetaTable
     end
 
     def self.initialize_meta controller, klass, options
+      MetaTable.klass         = klass
       MetaTable.controller    = controller
+      MetaTable.model_options = options
       MetaTable.table_options = options[:table_options] || {}
-      MetaTable.collection    = initialize_collection(klass)
+      MetaTable.collection    = initialize_collection
       MetaTable.hostname      = controller.request.host_with_port
       attributes    = options[:attributes] # modify_attributes(options[:attributes])
       table_actions = options[:actions]
@@ -112,20 +116,47 @@ module MetaTable
       wrap_all(content)
     end
 
-    def self.initialize_collection(klass)
+    def self.initialize_collection
       page = controller.params[:page] || 1
-      order_column = controller.params[:sort_by]
-      order_direction = controller.params[:order]
-      order = "#{order_column} #{order_direction}"
       per_page = table_options[:per_page] || 10
       scoped = klass.all
+      scoped = eval("scoped.order('#{ordering}')") if ordering
+      scoped = basic_search(scoped)
       if table_options[:scope]
         table_options[:scope].to_s.split('.').each do |chain|
           scoped = eval "scoped.#{chain}"
         end
       end
-      scoped = eval("scoped.order('#{order}')") if order.strip.present? && ['asc', 'desc'].include?(order_direction)
       collection = scoped.page(page).per(per_page)
+    end
+
+    def self.basic_search(scoped)
+      if controller.params[:basic_search] && controller.params[:basic_metatable_search]
+        execute_search(scoped)
+      else
+        scoped
+      end
+    end
+
+    def self.execute_search(scoped)
+      str = []
+      simple_searchable_columns.each do |column|
+        str << "#{column} LIKE :search"
+      end
+      mega_string = str.join(' OR ')
+      scoped = scoped.where("#{mega_string}", {search: "%#{controller.params[:basic_search]}%"})
+    end
+
+    def self.simple_searchable_columns
+      searchable_attributes = model_options[:attributes].select {|a| a.is_a?(Hash) && a[:searchable] == true}
+      searchable_suggested_columns = searchable_attributes.map {|r| r[:key].to_s}
+      klass.column_names & searchable_suggested_columns
+    end
+
+    def self.ordering
+      order_column = controller.params[:sort_by]
+      order_direction = controller.params[:order]
+      "#{order_column} #{order_direction}" if klass.column_names.include?(order_column) && ['asc', 'desc'].include?(order_direction)
     end
 
     def self.wrap_all(content)
@@ -147,8 +178,9 @@ module MetaTable
     end
 
     def self.render_simple_search
-      content_tag(:form, :method => 'get') do
-        concat(controller.make_erb nil, "<%= text_field_tag :search, controller.params[:search] %>")
+      content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
+        concat(controller.make_erb nil, "<%= hidden_field_tag :basic_metatable_search, true %>")
+        concat(controller.make_erb nil, "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
       end
     end
 

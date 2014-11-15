@@ -46,9 +46,7 @@ module MetaTable
     end
 
     def self.render_links(links)
-      rendered = links.map do |link|
-        link
-      end.join(' ').html_safe
+      rendered = links.map { |link| link }.join(' ').html_safe
       wrap_links(rendered)
     end
 

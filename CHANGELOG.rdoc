@@ -1,0 +1,7 @@
+== 0.0.2.alpha
+
+* Added features: sorting, searching, pagination, custom rendering
+
+== 0.0.1.alpha
+
+* First release
