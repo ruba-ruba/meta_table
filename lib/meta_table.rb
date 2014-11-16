@@ -32,17 +32,15 @@ module MetaTable
     mattr_accessor :model_options
     mattr_accessor :table_options
 
-    def self.get_data attributes, actions
+    def self.get_data attributes
       collection.map do |record|
-        raw_data = attributes.map do |attr|
+        attributes.map do |attr|
           if attr.is_a?(Symbol)
             record.send attr
           else
             fetch_rely_on_hash(record, attr)
           end
         end
-        raw_data << make_record_actions(record, actions) if actions.present?
-        raw_data
       end
     end
 
@@ -51,6 +49,7 @@ module MetaTable
         if action.is_a?(Array)
           action_name     = action[0]
           namespace       = action[1]
+          classes         = action[2]
           controller_with_namespace = "#{namespace}/#{controller.controller_name}"
         end  
         controller_with_namespace ||= controller.controller_name
@@ -68,7 +67,7 @@ module MetaTable
 
     def self.fetch_rely_on_hash(record, attribute)
       attr = attribute[:key]
-      relation = record.send(attr)
+      relation = record.send(attr) rescue record
       method   = attribute[:method]
       if method && ActiveRecord::Base.descendants.include?(relation.class)
         relation.send(:"#{method}")
@@ -81,24 +80,24 @@ module MetaTable
 
     # i suppose this shit should care about strings
     def self.implicit_render(record, attribute)
-      attr = attribute[:key]
       renderer = attribute[:render_text]
-      if erb?(renderer)
+      if renderer.is_a?(String) && erb?(renderer)
         render_erb(record, attribute)
       elsif renderer.is_a? String
         eval(renderer)
+      elsif renderer.is_a?(Array) && attribute[:key] == :actions # probably it is more than we need
+        make_record_actions(record, renderer)
       else
         renderer
       end
     end
 
     def self.erb?(string)
-      string.strip.start_with?('<%')
+      string.strip.start_with?('<%') && string.strip.ends_with?('%>')
     end
 
     def self.render_erb(record, attribute)
-      str = attribute[:render_text].gsub('value', "record")
-      controller.make_erb(record,str)
+      controller.make_erb(record,attribute[:render_text])
     end
 
     def self.initialize_meta controller, klass, options
@@ -109,10 +108,9 @@ module MetaTable
       MetaTable.collection    = initialize_collection
       MetaTable.hostname      = controller.request.host_with_port
       attributes    = options[:attributes] # modify_attributes(options[:attributes])
-      table_actions = options[:actions]
       top_actions   = options[:top_actions] # not implemented
-      hash_data     = get_data(attributes, table_actions)
-      content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data, table_actions) + render_table_footer)
+      hash_data     = get_data(attributes)
+      content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data) + render_table_footer)
       wrap_all(content)
     end
 
@@ -165,9 +163,9 @@ module MetaTable
       end
     end
 
-    def self.render_data_table(attributes, hash_data, table_actions)
+    def self.render_data_table(attributes, hash_data)
       content_tag(:table, nil, class: "data_table") do
-        render_table_header(attributes, table_actions) + render_table_data(hash_data)
+        render_table_header(attributes) + render_table_data(hash_data)
       end
     end
 
@@ -181,7 +179,7 @@ module MetaTable
       content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
         concat(controller.make_erb nil, "<%= hidden_field_tag :basic_metatable_search, true %>")
         concat(controller.make_erb nil, "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
-      end
+      end + content_tag(:div, "", class: 'clearfix')
     end
 
     def self.render_table_footer
@@ -260,8 +258,7 @@ module MetaTable
       end
     end
 
-    def self.render_table_header attributes, table_actions
-      attributes << "Actions" if table_actions.present? && table_actions.any?
+    def self.render_table_header attributes
       concat(content_tag(:thead, nil) do  
         concat(content_tag(:tr, nil) do
           attributes.map do |attribute|
@@ -271,7 +268,6 @@ module MetaTable
           end
         end)
       end)
-      attributes.delete("Actions") # rework this
     end
 
   # end

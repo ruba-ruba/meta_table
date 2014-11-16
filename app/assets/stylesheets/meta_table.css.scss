@@ -1,13 +1,15 @@
 .meta_wrapper {
   width: 100%;
   margin: 0;
-  border: 1px solid silver;
   .top_header_wrapper{
     width: 100%;
     margin: 0;
     #meta_table_search_form{
       width: 20%;
       float: right;
+      input{ 
+        margin: 0px;
+      }
     }
   }
   table{
