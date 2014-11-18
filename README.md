@@ -32,6 +32,15 @@ Example Usage
     @table = render_meta_table(Post::POST_TABLE_OPTS)
   end
 
+  # meta table also accept your collection as opitional param
+
+  def index
+    my_collection = Model.scope  # scope or whatever which return AR relation object
+    @table = render_meta_table(Post::POST_TABLE_OPTS, { collection: my_collection } )
+  end
+
+  # notice: using your own collection scope chain from params are ignored
+  
 ```
 
 and then in 'posts/index.html.erb'
@@ -45,8 +54,11 @@ and then in 'posts/index.html.erb'
 ```ruby
 OPTIONS = { attributes: [attributes array]
             actions: [actions in table]
-            table_options: {:scope => symbol or string as scope chain, per_page: per_page}
+            table_options: {:scope => symbol or string as scope chain, per_page: per_page, klass: Model}
           }
+# all table options are optional
+# klass might be ommited whenever controller & model match
+
 ```
 
 actions detailed:
@@ -63,6 +75,7 @@ pass only symbols to get raw data
 
 ```ruby
 ... attributes: [:email, :name, :your_method/column_name] 
+
 ```
 
 use hash syntax to specify more details

@@ -100,31 +100,39 @@ module MetaTable
       controller.make_erb(record,attribute[:render_text])
     end
 
-    def self.initialize_meta controller, klass, options
-      MetaTable.klass         = klass
+    def self.initialize_meta controller, klass, table_options, options
+      MetaTable.klass         = (table_options[:table_options] && table_options[:table_options][:klass]) || klass
       MetaTable.controller    = controller
-      MetaTable.model_options = options
-      MetaTable.table_options = options[:table_options] || {}
-      MetaTable.collection    = initialize_collection
+      MetaTable.model_options = table_options
+      MetaTable.table_options = table_options[:table_options] || {}
+      MetaTable.collection    = initialize_collection(options[:collection])
       MetaTable.hostname      = controller.request.host_with_port
-      attributes    = options[:attributes] # modify_attributes(options[:attributes])
-      top_actions   = options[:top_actions] # not implemented
+      attributes    = table_options[:attributes] # modify_attributes(options[:attributes])
+      top_actions   = table_options[:top_actions] # not implemented
       hash_data     = get_data(attributes)
       content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data) + render_table_footer)
       wrap_all(content)
     end
 
-    def self.initialize_collection
-      page = controller.params[:page] || 1
-      per_page = table_options[:per_page] || 10
-      scoped = klass.all
-      scoped = eval("scoped.order('#{ordering}')") if ordering
-      scoped = basic_search(scoped)
-      if table_options[:scope]
-        table_options[:scope].to_s.split('.').each do |chain|
-          scoped = eval "scoped.#{chain}"
+    def self.initialize_collection(given_collection = nil)
+      if given_collection && given_collection.is_a?(klass::ActiveRecord_Relation)
+        scoped = given_collection
+      else
+        scoped = klass.all
+        scoped = eval("scoped.order('#{ordering}')") if ordering
+        if table_options[:scope]
+          table_options[:scope].to_s.split('.').each do |chain|
+            scoped = eval "scoped.#{chain}"
+          end
         end
       end
+      scoped     = basic_search(scoped)
+      collection = paginated_collection(scoped)
+    end
+
+    def self.paginated_collection(scoped)
+      page       = controller.params[:page] || 1
+      per_page   = table_options[:per_page] || 10
       collection = scoped.page(page).per(per_page)
     end
 
