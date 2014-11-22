@@ -4,6 +4,25 @@ MetaTable
 philosophy: Creating simple and powerful generating table mechanism which allow create and manipulate a lot of tables in a seconds.
 
 
+## setup
+-----
+
+#### Gemfile
+```ruby 
+  gem 'meta_table', :require => true
+```
+
+#### application.js
+```//= require meta_table```
+#### application.css
+```*= require meta_table```
+
+#### generate 
+```ruby 
+  rake meta_table:generate_data_view_table
+  rake db:migrate
+```  
+
 Example Usage
 -------------
 
@@ -95,7 +114,6 @@ use hash syntax to specify more details
 
 
 
-## License
+### License
 
-This project rocks and uses MIT-LICENSE.
-----------------------------------------
+#### This project rocks and uses MIT-LICENSE.

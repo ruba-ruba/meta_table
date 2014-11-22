@@ -2,7 +2,8 @@ module MetaTable
   class Railtie < Rails::Railtie
     initializer 'meta_table.model_additions' do
       ActiveSupport.on_load :active_record do
-        extend ModelAdditions
+        include MetaTable::ControllerAdditions
+        extend  MetaTable::ModelAdditions
       end
     end
     initializer "meta_table.controller_additions" do
@@ -17,6 +18,10 @@ module MetaTable
         extend  MetaTable::ViewAdditions
       end
     end
+    rake_tasks do
+      load 'tasks/meta_table_tasks.rake'
+    end
   end
+
 end
 

@@ -1,12 +1,13 @@
 require "meta_table/version"
-require 'meta_table/railtie'
-require 'meta_table/model_additions' if defined?(Rails)
+require "meta_table/railtie"              if defined?(Rails)
+require 'meta_table/model_additions'      if defined?(Rails)
 require 'meta_table/controller_additions' if defined?(Rails)
 require 'action_view'
 require 'action_controller'
 require 'erb'
 
 require 'meta_table/pagination'
+# require 'meta_table_view'
 
 
 module MetaTable
@@ -23,6 +24,8 @@ module MetaTable
     extend ActionView::Helpers::UrlHelper
     extend ActionView::Helpers::TextHelper 
     extend ActionView::Helpers::TagHelper
+    extend ActionView::Helpers::FormTagHelper
+    extend ActionView::Helpers::FormOptionsHelper
     extend ActionView::Context
 
     mattr_accessor :klass
@@ -180,14 +183,20 @@ module MetaTable
     def self.render_top_header top_actions
       content_tag(:div, nil, class: 'top_header_wrapper') do
         concat(render_simple_search)
-      end
+        concat(render_filter_list)
+      end + content_tag(:div, "", class: 'clearfix')
+    end
+
+    def self.render_filter_list
+      options_for_select = [['default', 0]] + MetaTableView.all.positioned.collect{ |r| [r.name, r.id] }
+      select_tag 'meta_table_view', options_for_select(options_for_select)
     end
 
     def self.render_simple_search
       content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
         concat(controller.make_erb nil, "<%= hidden_field_tag :basic_metatable_search, true %>")
         concat(controller.make_erb nil, "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
-      end + content_tag(:div, "", class: 'clearfix')
+      end
     end
 
     def self.render_table_footer

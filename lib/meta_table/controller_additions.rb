@@ -1,9 +1,8 @@
 module MetaTable
   module ControllerAdditions
-    def render_meta_table(table_options, options = {})
+    def render_meta_table(table_options, options = {}) 
       MetaTable.initialize_meta(self, self.resource_class, table_options, options)
     end
-
 
     def self.included(base)
       base.include MetaTable
@@ -21,12 +20,6 @@ module MetaTable
       end
     end
 
-    class ActionController::Base    
-      def self.from_controller(klass, options={}, &block)
-        binding.pry
-        p 'i\'ve opened this class'
-      end
-    end 
   end
 
   module ViewAdditions

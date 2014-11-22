@@ -5,11 +5,16 @@
     width: 100%;
     margin: 0;
     #meta_table_search_form{
+      margin-left: 20px;
       width: 20%;
       float: right;
       input{ 
         margin: 0px;
       }
+    }
+    #meta_table_view{
+      width: 20%;
+      float: right;
     }
   }
   table{
