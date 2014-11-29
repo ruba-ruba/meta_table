@@ -6,7 +6,7 @@ class CreateMetaTableViews < ActiveRecord::Migration
       t.boolean :hidden,   :default => false
       t.boolean :editable, :default => true
       t.integer :position
-      t.string  :table_columns
+      t.text    :table_columns
       t.string  :conditions
       t.integer :created_by
 

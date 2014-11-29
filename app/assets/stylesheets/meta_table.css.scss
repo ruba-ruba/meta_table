@@ -8,12 +8,18 @@
       margin-left: 20px;
       width: 20%;
       float: right;
-      input{ 
+      input{
         margin: 0px;
+        width: 50%;
+        float: right;
+      }
+      select{
+        float: left;
+        margin: 0px;
+        width: 50%; 
       }
     }
-    #meta_table_view{
-      width: 20%;
+    #table_view{
       float: right;
     }
   }

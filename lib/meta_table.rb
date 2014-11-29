@@ -32,8 +32,8 @@ module MetaTable
     mattr_accessor :hostname
     mattr_accessor :controller
     mattr_accessor :collection
-    mattr_accessor :model_options
     mattr_accessor :table_options
+    mattr_accessor :model_attributes
 
     def self.get_data attributes
       collection.map do |record|
@@ -95,26 +95,40 @@ module MetaTable
       end
     end
 
-    def self.erb?(string)
-      string.strip.start_with?('<%') && string.strip.ends_with?('%>')
-    end
-
     def self.render_erb(record, attribute)
       controller.make_erb(record,attribute[:render_text])
     end
 
+    def self.erb?(string)
+      string.strip.start_with?('<%') && string.strip.ends_with?('%>')
+    end
+
     def self.initialize_meta controller, klass, table_options, options
-      MetaTable.klass         = (table_options[:table_options] && table_options[:table_options][:klass]) || klass
-      MetaTable.controller    = controller
-      MetaTable.model_options = table_options
-      MetaTable.table_options = table_options[:table_options] || {}
-      MetaTable.collection    = initialize_collection(options[:collection])
-      MetaTable.hostname      = controller.request.host_with_port
-      attributes    = table_options[:attributes] # modify_attributes(options[:attributes])
+      MetaTable.klass            = (table_options[:table_options] && table_options[:table_options][:klass]) || klass
+      MetaTable.controller       = controller
+      MetaTable.model_attributes = table_options[:attributes]
+      MetaTable.table_options    = table_options[:table_options] || {}
+      MetaTable.collection       = initialize_collection(options[:collection])
+      MetaTable.hostname         = controller.request.host_with_port
+      attributes    = modified_attriubtes
       top_actions   = table_options[:top_actions] # not implemented
       hash_data     = get_data(attributes)
       content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data) + render_table_footer)
       wrap_all(content)
+    end
+
+    def self.modified_attriubtes
+      if mtw = MetaTableView.find_by_id(controller.params[:table_view])
+        model_attributes.select do |a| 
+          if a.is_a?(Hash)
+            mtw.table_columns.include?(a[:key].to_s)
+          else 
+            mtw.table_columns.include?(a.to_s)
+          end
+        end
+      else
+        model_attributes
+      end
     end
 
     def self.initialize_collection(given_collection = nil)
@@ -129,8 +143,8 @@ module MetaTable
           end
         end
       end
-      scoped     = basic_search(scoped)
-      collection = paginated_collection(scoped)
+      scoped = basic_search(scoped)
+      paginated_collection(scoped)
     end
 
     def self.paginated_collection(scoped)
@@ -140,7 +154,7 @@ module MetaTable
     end
 
     def self.basic_search(scoped)
-      if controller.params[:basic_search] && controller.params[:basic_metatable_search]
+      if controller.params[:basic_search]
         execute_search(scoped)
       else
         scoped
@@ -157,7 +171,7 @@ module MetaTable
     end
 
     def self.simple_searchable_columns
-      searchable_attributes = model_options[:attributes].select {|a| a.is_a?(Hash) && a[:searchable] == true}
+      searchable_attributes = model_attributes.select {|a| a.is_a?(Hash) && a[:searchable] == true}
       searchable_suggested_columns = searchable_attributes.map {|r| r[:key].to_s}
       klass.column_names & searchable_suggested_columns
     end
@@ -182,20 +196,16 @@ module MetaTable
 
     def self.render_top_header top_actions
       content_tag(:div, nil, class: 'top_header_wrapper') do
-        concat(render_simple_search)
-        concat(render_filter_list)
+        render_simple_search_and_filter
       end + content_tag(:div, "", class: 'clearfix')
     end
 
-    def self.render_filter_list
-      options_for_select = [['default', 0]] + MetaTableView.all.positioned.collect{ |r| [r.name, r.id] }
-      select_tag 'meta_table_view', options_for_select(options_for_select)
-    end
 
-    def self.render_simple_search
+    def self.render_simple_search_and_filter
+      options_for_select = [['default', -1]] + MetaTableView.for_user.positioned.collect{ |r| [r.name, r.id] }
       content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-        concat(controller.make_erb nil, "<%= hidden_field_tag :basic_metatable_search, true %>")
         concat(controller.make_erb nil, "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
+        concat(select_tag 'table_view', options_for_select(options_for_select, controller.params[:table_view]), onchange: "this.form.submit();")
       end
     end
 
