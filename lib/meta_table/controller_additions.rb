@@ -14,7 +14,7 @@ module MetaTable
       base.include ActionView::Helpers::FormTagHelper
       
       base.class_eval do
-        def make_erb(record,str)
+        def make_erb(str, record=nil)
           ERB.new(str).result(binding).html_safe
         end
       end

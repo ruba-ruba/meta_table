@@ -7,7 +7,7 @@ require 'action_controller'
 require 'erb'
 
 require 'meta_table/pagination'
-# require 'meta_table_view'
+
 
 
 module MetaTable
@@ -61,7 +61,7 @@ module MetaTable
         if action_name == :destroy
           link_to action_name, route, method: :delete, data: {:confirm => 'Are you sure?'}
         elsif action.is_a?(String)
-          controller.make_erb(record, action)
+          controller.make_erb(action, record)
         else
           link_to action_name, route
         end
@@ -85,7 +85,7 @@ module MetaTable
     def self.implicit_render(record, attribute)
       renderer = attribute[:render_text]
       if renderer.is_a?(String) && erb?(renderer)
-        render_erb(record, attribute)
+        controller.make_erb(renderer, record)
       elsif renderer.is_a? String
         eval(renderer)
       elsif renderer.is_a?(Array) && attribute[:key] == :actions # probably it is more than we need
@@ -93,10 +93,6 @@ module MetaTable
       else
         renderer
       end
-    end
-
-    def self.render_erb(record, attribute)
-      controller.make_erb(record,attribute[:render_text])
     end
 
     def self.erb?(string)
@@ -204,7 +200,7 @@ module MetaTable
     def self.render_simple_search_and_filter
       options_for_select = [['default', -1]] + MetaTableView.for_user.positioned.collect{ |r| [r.name, r.id] }
       content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-        concat(controller.make_erb nil, "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
+        concat(controller.make_erb "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
         concat(select_tag 'table_view', options_for_select(options_for_select, controller.params[:table_view]), onchange: "this.form.submit();")
       end
     end
