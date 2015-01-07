@@ -113,6 +113,15 @@ module MetaTable
       wrap_all(content)
     end
 
+    # def self.model_attributes_keys
+    #   attributes = if MetaTable.model_attributes.present?
+    #     symbols = MetaTable.model_attributes.select { |a| a.is_a? Symbol } 
+    #     hashes  = MetaTable.model_attributes.select { |a| a.is_a? Hash }
+    #     symbols + hashes.map { |h| h[:key] }
+    #   end
+    #   (attributes || []).flatten
+    # end
+
     def self.modified_attriubtes
       if mtw = MetaTableView.find_by_id(controller.params[:table_view])
         model_attributes.select do |a| 

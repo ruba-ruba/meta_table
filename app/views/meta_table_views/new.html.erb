@@ -1,6 +1,14 @@
 <%= form_for @mtw do |f| %>
   <%= f.text_field :name %>
   <%= f.hidden_field :source_class, value: params[:klass] %>
+  <%= f.hidden_field :route_back, value: request.referrer %>
+  <%= f.fields_for :table_columns do |tc| %>
+    <% MetaTable.model_attributes; [].each do |attr| %>
+      <br>
+      <%= attr %>
+      <%= tc.check_box attr %>
+    <% end %>
+  <% end %>
   <br/>
   <%= f.submit %>
 <% end %> 

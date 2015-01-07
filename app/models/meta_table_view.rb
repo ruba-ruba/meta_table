@@ -1,8 +1,10 @@
 class MetaTableView < ActiveRecord::Base
 
+  attr_accessor :route_back
+
   validate :name, :source_class, :table_columns, presence: true
 
-  serialize :table_columns, Array
+  serialize :table_columns
 
   scope :positioned, -> { order(:position) }
 
