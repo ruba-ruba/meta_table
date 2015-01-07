@@ -1,7 +1,10 @@
 class MetaTableView < ActiveRecord::Base
+
+  validate :name, :source_class, :table_columns, presence: true
+
   serialize :table_columns, Array
 
-  scope :positioned, -> {order('position')}
+  scope :positioned, -> { order(:position) }
 
   scope :for_user, ->(user=nil) {
     if user.present?
