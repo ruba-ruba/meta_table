@@ -13,7 +13,7 @@ class MetaTableViewsController < ApplicationController
   def create
     @mtw = MetaTableView.new(params[:meta_table_view])
     if @mtw.save
-      redirect_to "/meta_table_views/#{@mtw.id}/edit"
+      redirect_to "/meta_table/#{@mtw.id}/edit"
     else
       render :action => :new
     end
@@ -22,7 +22,7 @@ class MetaTableViewsController < ApplicationController
   def update
     @mtw = MetaTableView.new(params[:meta_table_view])
     if @mtw.save
-      redirect_to "/meta_table_views/#{@mtw.id}/edit"
+      redirect_to "/meta_table/#{@mtw.id}/edit"
     else
       render :action => :new
     end

@@ -200,6 +200,7 @@ module MetaTable
     def self.render_simple_search_and_filter
       options_for_select = [['default', -1]] + MetaTableView.for_user.positioned.collect{ |r| [r.name, r.id] }
       content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
+        concat(link_to 'create', "/meta_table/new?klass=#{MetaTable.klass}")
         concat(controller.make_erb "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
         concat(select_tag 'table_view', options_for_select(options_for_select, controller.params[:table_view]), onchange: "this.form.submit();")
       end

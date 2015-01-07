@@ -1,5 +1,6 @@
 <%= form_for @mtw do |f| %>
   <%= f.text_field :name %>
+  <%= f.hidden_field :source_class, value: params[:klass] %>
   <br/>
   <%= f.submit %>
 <% end %> 
