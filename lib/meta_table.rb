@@ -32,8 +32,13 @@ module MetaTable
     mattr_accessor :hostname
     mattr_accessor :controller
     mattr_accessor :collection
+    mattr_accessor :raw_options
     mattr_accessor :table_options
     mattr_accessor :model_attributes
+
+    def raw_options
+      super || {}
+    end
 
     def self.get_data attributes
       collection.map do |record|
@@ -97,6 +102,10 @@ module MetaTable
 
     def self.erb?(string)
       string.strip.start_with?('<%') && string.strip.ends_with?('%>')
+    end
+
+    def self.preinit_table(raw_options)
+      MetaTable.raw_options = raw_options
     end
 
     def self.initialize_meta controller, klass, table_options, options

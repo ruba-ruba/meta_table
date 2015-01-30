@@ -2,6 +2,7 @@ class MetaTableViewsController < ApplicationController
   layout false
 
   def new
+    # binding.pry
     @mtw = MetaTableView.new
   end
 

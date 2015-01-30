@@ -19,7 +19,7 @@ philosophy: Creating simple and powerful generating table mechanism which allow 
 
 #### generate 
 ```ruby 
-  rake meta_table:generate_data_view_table
+  rails g mtw
   rake db:migrate
 ```  
 

@@ -1,7 +1,12 @@
 module MetaTable
   module ControllerAdditions
+   
     def render_meta_table(table_options, options = {}) 
       MetaTable.initialize_meta(self, self.resource_class, table_options, options)
+    end
+
+    def meta_table(raw_options)
+      MetaTable.preinit_table(raw_options)
     end
 
     def self.included(base)
