@@ -18,7 +18,6 @@ module MetaTable
     def self.render_pagination
       current_url = controller.request.url
       current_page = collection.current_page
-      # binding.pry
       url_wih_page = if current_url.match(/page=\d{1,}/)
         current_url.gsub(/page=\d{1,}/, "page=#{current_page}")
       elsif current_url.match('\?\w')

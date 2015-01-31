@@ -4,6 +4,7 @@ class CreateMetaTableViews < ActiveRecord::Migration
       create_table :meta_table_views do |t|
         t.string  :name
         t.string  :source_class
+        t.string  :source_controller
         t.boolean :hidden,   :default => false
         t.boolean :editable, :default => true
         t.integer :position

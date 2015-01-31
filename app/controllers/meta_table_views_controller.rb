@@ -12,6 +12,7 @@ class MetaTableViewsController < ApplicationController
   end
 
   def create
+    # binding.pry 
     @mtw = MetaTableView.new(params[:meta_table_view])
     if @mtw.save
       redirect_to route_back

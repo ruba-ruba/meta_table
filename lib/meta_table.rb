@@ -106,41 +106,41 @@ module MetaTable
 
     def self.preinit_table(key, args, options)
       klass = options[:klass] || key
-      MetaTable.klass = klass.to_s.singularize.camelize.constantize
       define_method("render_#{key}_table") do |controller = self|
-        MetaTable.initialize_meta(controller, args, options)
+        MetaTable.initialize_meta(key, controller, args, options)
       end
     end
 
-    def self.initialize_meta controller, attributes, options
+    def self.initialize_meta key, controller, attributes, options
+      MetaTable.klass            = key.to_s.singularize.camelize.constantize
       MetaTable.controller       = controller
       MetaTable.model_attributes = attributes
       MetaTable.table_options    = options || {}
       MetaTable.collection       = initialize_collection(options[:collection])
       MetaTable.hostname         = controller.request.host_with_port
-      attributes    = modified_attriubtes
-      top_actions   = options[:top_actions] # not implemented
-      hash_data     = get_data(attributes)
-      content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data) + render_table_footer)
+      top_actions = nil # not implemented
+      hash_data   = get_data(modified_attriubtes)
+      content     = (render_top_header(top_actions) + render_data_table(modified_attriubtes, hash_data) + render_table_footer)
       wrap_all(content)
     end
 
-    # def self.model_attributes_keys
-    #   attributes = if MetaTable.model_attributes.present?
-    #     symbols = MetaTable.model_attributes.select { |a| a.is_a? Symbol } 
-    #     hashes  = MetaTable.model_attributes.select { |a| a.is_a? Hash }
-    #     symbols + hashes.map { |h| h[:key] }
-    #   end
-    #   (attributes || []).flatten
-    # end
+    def self.model_attributes_keys
+      attributes = if MetaTable.model_attributes.present?
+        symbols = MetaTable.model_attributes.select { |a| a.is_a? Symbol } 
+        hashes  = MetaTable.model_attributes.select { |a| a.is_a? Hash }
+        symbols + hashes.map { |h| h[:key] }
+      end
+      (attributes || []).flatten
+    end
 
     def self.modified_attriubtes
       if mtw = MetaTableView.find_by_id(controller.params[:table_view])
-        model_attributes.select do |a| 
+        model_attributes.select do |a|
+          enabled = mtw.table_columns.select {|k,v| v == '1'}
           if a.is_a?(Hash)
-            mtw.table_columns.include?(a[:key].to_s)
+            enabled.include?(a[:key].to_s)
           else 
-            mtw.table_columns.include?(a.to_s)
+            enabled.include?(a.to_s)
           end
         end
       else
@@ -213,15 +213,16 @@ module MetaTable
 
     def self.render_top_header top_actions
       content_tag(:div, nil, class: 'top_header_wrapper') do
-        render_simple_search_and_filter
+        concat(render_simple_search_and_filter)
+        concat(content_tag(:div, "", class: 'clearfix'))
       end + content_tag(:div, "", class: 'clearfix')
     end
 
 
     def self.render_simple_search_and_filter
-      options_for_select = [['default', -1]] + MetaTableView.for_user.positioned.collect{ |r| [r.name, r.id] }
+      options_for_select = [['default', -1]] + MetaTableView.where(:source_controller => controller.class.name.to_s).for_user.positioned.collect{ |r| [r.name, r.id] }
       content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-        concat(link_to 'create', "/meta_table/new?klass=#{MetaTable.klass}")
+        concat(link_to 'create', "/meta_table/new?key=#{MetaTable.controller.class}", class: 'create_mtw_button')
         concat(controller.make_erb "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
         concat(select_tag 'table_view', options_for_select(options_for_select, controller.params[:table_view]), onchange: "this.form.submit();")
       end
@@ -252,7 +253,7 @@ module MetaTable
       case attribute.class.to_s
       when 'String'
         attribute
-      when 'Array' || 'Fixnum'
+      when 'Array', 'Fixnum'
         attribute.to_s
       when 'Symbol' # this is part of header's => => => remove this to separate method
         attribute.to_s.try(:humanize)

@@ -10,13 +10,18 @@
       float: right;
       input{
         margin: 0px;
-        width: 50%;
+        width: 40%;
         float: right;
       }
       select{
         float: left;
         margin: 0px;
-        width: 50%; 
+        width: 40%; 
+      }
+      a{
+       float: left;
+        margin: 0px;
+        width: 20%; 
       }
     }
     #table_view{
