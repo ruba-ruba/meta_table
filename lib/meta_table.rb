@@ -104,19 +104,22 @@ module MetaTable
       string.strip.start_with?('<%') && string.strip.ends_with?('%>')
     end
 
-    def self.preinit_table(raw_options)
-      MetaTable.raw_options = raw_options
+    def self.preinit_table(key, args, options)
+      klass = options[:klass] || key
+      MetaTable.klass = klass.to_s.singularize.camelize.constantize
+      define_method("render_#{key}_table") do |controller = self|
+        MetaTable.initialize_meta(controller, args, options)
+      end
     end
 
-    def self.initialize_meta controller, klass, table_options, options
-      MetaTable.klass            = (table_options[:table_options] && table_options[:table_options][:klass]) || klass
+    def self.initialize_meta controller, attributes, options
       MetaTable.controller       = controller
-      MetaTable.model_attributes = table_options[:attributes]
-      MetaTable.table_options    = table_options[:table_options] || {}
+      MetaTable.model_attributes = attributes
+      MetaTable.table_options    = options || {}
       MetaTable.collection       = initialize_collection(options[:collection])
       MetaTable.hostname         = controller.request.host_with_port
       attributes    = modified_attriubtes
-      top_actions   = table_options[:top_actions] # not implemented
+      top_actions   = options[:top_actions] # not implemented
       hash_data     = get_data(attributes)
       content       = (render_top_header(top_actions) + render_data_table(attributes, hash_data) + render_table_footer)
       wrap_all(content)
@@ -310,6 +313,14 @@ module MetaTable
           end
         end)
       end)
+    end
+
+    def method_missing(meth, *args, &block)
+      if meth.to_s.match(/render_/) && meth.to_s.match(/_table/)
+        'rock and handle this even before'
+      else
+        super
+      end
     end
 
   # end

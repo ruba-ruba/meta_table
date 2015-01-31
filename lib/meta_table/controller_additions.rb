@@ -5,8 +5,8 @@ module MetaTable
       MetaTable.initialize_meta(self, self.resource_class, table_options, options)
     end
 
-    def meta_table(raw_options)
-      MetaTable.preinit_table(raw_options)
+    def meta_table(key, args, options)
+      MetaTable.preinit_table(key, args, options)
     end
 
     def self.included(base)
