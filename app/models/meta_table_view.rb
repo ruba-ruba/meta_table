@@ -10,9 +10,14 @@ class MetaTableView < ActiveRecord::Base
 
   scope :for_user, ->(user=nil) {
     if user.present?
-      positioned # TODO: all accessible scopes + all private user scopes 
+      positioned # TODO: all accessible scopes + all private user scopes
     else
       positioned # TODO: all accessible scopes
     end
   }
+
+  def enabled_attributes
+    table_columns.select {|k,v| v == '1'}
+  end
+
 end

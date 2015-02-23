@@ -1,6 +1,7 @@
 MetaTable
 =========
 
+
 philosophy: Creating simple and powerful generating table mechanism which allow create and manipulate a lot of tables in a seconds.
 
 
@@ -17,7 +18,7 @@ philosophy: Creating simple and powerful generating table mechanism which allow 
 #### application.css
 ```*= require meta_table```
 
-#### generate 
+#### generate
 ```ruby 
   rails g mtw
   rake db:migrate
@@ -51,17 +52,6 @@ Example Usage
       @table = render_posts_table
     end
 
-    
-    # needs to be checked due to big reworking
-
-    # meta table also accept your collection as opitional param
-    # def index
-    #   my_collection = Model.scope  # scope or whatever which return AR relation object
-    #   @table = render_meta_table({ collection: my_collection })
-    # end
-
-    # notice: using your own collection scope chain from params are ignored
-  
 ```
 
 and then in 'posts/index.html.erb'
@@ -108,6 +98,14 @@ use hash syntax to specify more details
 # render_text:  when key is :actions   you can pass array here and put list of actions, anyway you still can put all actions in erb string
 ```
 
+
+### Current = "0.0.2.alpha"
+
+### Next = "0.0.3"
+- display: false
+
+#### Plan
+- Add I18n support for labels
 
 
 ### License

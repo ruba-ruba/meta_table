@@ -1,9 +1,5 @@
 module MetaTable
   module ControllerAdditions
-   
-    def render_meta_table(table_options, options = {}) 
-      MetaTable.initialize_meta(self, self.resource_class, table_options, options)
-    end
 
     def meta_table(key, args, options)
       MetaTable.preinit_table(key, args, options)
@@ -15,9 +11,9 @@ module MetaTable
       base.include ActionView::Helpers::UrlHelper
       base.include ActionView::Helpers::TagHelper
       base.include ActionView::Context
-      base.include ActionView::Helpers::AssetTagHelper 
+      base.include ActionView::Helpers::AssetTagHelper
       base.include ActionView::Helpers::FormTagHelper
-      
+
       base.class_eval do
         def make_erb(str, record=nil)
           ERB.new(str).result(binding).html_safe
@@ -28,10 +24,10 @@ module MetaTable
   end
 
   module ViewAdditions
-    
+
     module InstanceMethods
     end
-    
+
     def self.included(base)
       # base.extend         ClassMethods
       base.send :include, InstanceMethods

@@ -1,21 +1,12 @@
-module MetaTable
-  module Pagination
+module Pagination
 
-    extend ActiveSupport::Inflector
-    extend ActionView::Helpers::UrlHelper
-    extend ActionView::Helpers::TextHelper 
-    extend ActionView::Helpers::TagHelper
-    extend ActionView::Context
+  def self.included(receiver)
+    receiver.extend ClassMethods
+  end
 
-    def self.controller
-      MetaTable.controller     
-    end
+  module ClassMethods
 
-    def self.collection
-      MetaTable.collection
-    end
-
-    def self.render_pagination
+    def render_pagination
       current_url = controller.request.url
       current_page = collection.current_page
       url_wih_page = if current_url.match(/page=\d{1,}/)
@@ -28,9 +19,8 @@ module MetaTable
       rendered_links(url_wih_page, current_page)
     end
 
-    def self.rendered_links(url_wih_page, current_page) 
+    def rendered_links(url_wih_page, current_page) 
       links = []
-      # binding.pry
       first_page = link_to 'first page', format_link_url(url_wih_page, 1) unless collection.first_page? 
       prev_page  = link_to "#{current_page.to_i-1}", format_link_url(url_wih_page,current_page.to_i-1) if !collection.first_page? && current_page.to_i-1 <= 0 
       current    = "#{current_page}"
@@ -40,21 +30,20 @@ module MetaTable
       render_links(links)
     end
 
-    def self.format_link_url url_wih_page, page_number
+    def format_link_url url_wih_page, page_number
       url_wih_page.gsub(/page=\d{1,}/, "page=#{page_number}")
     end
 
-    def self.render_links(links)
+    def render_links(links)
       rendered = links.map { |link| link }.join(' ').html_safe
       wrap_links(rendered)
     end
 
-    def self.wrap_links(rendered)
+    def wrap_links(rendered)
       content_tag(:div, nil, class: 'pagination') do
         rendered
-      end  
+      end
     end
 
   end
 end
-
