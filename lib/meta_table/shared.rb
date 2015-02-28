@@ -1,13 +1,13 @@
 module Shared
   module ClassMethods
     def deep_send_with_object(object, route)
-      route.split('.').inject(object){|memo,obj| memo ? memo.send(obj) : nil }
+      route.to_s.split('.').inject(object){|memo,obj| memo ? memo.send(obj) : nil }
     end
   end
 
   module InstanceMethods
     def deep_send(route)
-      binding.pry
+      route.to_s.split('.').inject(self) { |memo, obj| memo ? memo.send(obj) : nil }
     end
   end
 

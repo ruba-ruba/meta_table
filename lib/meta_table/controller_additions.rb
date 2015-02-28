@@ -3,7 +3,24 @@ module MetaTable
 
     def meta_table(key, args, options)
       MetaTable.preinit_table(key, args, options)
+
+      class_methods = <<-CLASS_METHODS
+        protected
+        @@#{key}_columns = []
+
+        def #{key}_columns
+          @@#{key}_columns
+        end
+
+        def #{key}_columns=(cols)
+          @@#{key}_columns=cols
+        end
+      CLASS_METHODS
+      self.instance_eval(class_methods)
+      self.send("#{key}_columns=",args)
     end
+
+
 
     def self.included(base)
       base.include MetaTable

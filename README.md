@@ -33,16 +33,16 @@ Example Usage
 
   class PostsController < ApplicationController
 
-    meta_table :posts,
+    meta_table :post,
          [
-          {key: :id, label: 'Number', sortable: true},
-          {key: :logo, label: 'Preview', render_text: "<%= image_tag(record.logo, style:'height: 100px;width:100px;') %>"}, 
-          {key: :title, sortable: true, searchable: true}, 
-          {key: :published, label: 'Shown?'}, 
-          {key: :content, render_text: "<%= record.content %>", searchable: true}, 
-          {key: :content_type, render_text: "record.content_type"}, 
-          :views_count, 
-          :tag_list, 
+          {key: :id, label: 'Number'},
+          {key: :logo, label: 'Preview', render_text: "<%= image_tag(record.logo, style:'height: 100px;width:100px;') %>"},
+          {key: :title, searchable: true},
+          {key: :published, label: 'Shown?'},
+          {key: :content, render_text: "<%= record.content %>", searchable: true},
+          {key: :content_type, render_text: "record.content_type"},
+          :views_count,
+          :tag_list,
           {key: :user, method: :email, label: "Created By Email"},
           {key: :actions, label: 'Actions From Attrs', render_text: [:show, [:edit, :admin],[:destroy, :admin], "<%= link_to 'Edit', edit_admin_post_path(record), class: 'button small' %>"]}
          ],
@@ -79,7 +79,7 @@ actions: [:show, [:destroy, :admin], "<%= link_to record.title, your_path(record
 pass only symbols to get raw data
 
 ```ruby
-... [:email, :name, :your_method/column_name] 
+... [:email, :name, :your_method/column_name]
 
 ```
 
@@ -87,12 +87,11 @@ use hash syntax to specify more details
 
 
 ```ruby
-... :table_name, [{key: :id, label: 'Number', sortable: true, render_text: 'value.html_safe'}, {...}]
+... :table_name, [{key: :id, label: 'Number', render_text: 'value.html_safe'}, {...}]
 
 
 # key:          is attrubute/method name
 # label:        change column name to record you added      ->  i18n will be soon
-# sortable :    makes column sortable
 # searchable:   makes column searchable in basic sql like search
 # render_text:  execute your code with each record. record is keyword that means record in database    -> no rescue here yet
 # render_text:  when key is :actions   you can pass array here and put list of actions, anyway you still can put all actions in erb string
@@ -102,6 +101,7 @@ use hash syntax to specify more details
 ### Current = "0.0.2.alpha"
 
 ### Next = "0.0.3"
+- removed sortable lfag. Now all cols which possible are sortable
 - display: false
 
 #### Plan

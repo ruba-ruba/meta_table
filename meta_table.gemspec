@@ -17,4 +17,5 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
 
   s.add_dependency('kaminari', '~> 0.16.1')
+  s.add_dependency('will_paginate', '~> 3.0.7')
 end

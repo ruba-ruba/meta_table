@@ -19,14 +19,12 @@ module Fetch
     end
 
     def fetch_rely_on_hash(record, attribute)
-      attr   = attribute[:key]
-      method = attribute[:method]
+      attr = attribute[:key]
       if attribute[:render_text]
         implicit_render(record, attribute)
       else
-        record.send(attr)
+        record.deep_send(attr)
       end
-      # add deep send
     end
 
   end

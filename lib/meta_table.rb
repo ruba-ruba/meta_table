@@ -12,6 +12,8 @@ require 'meta_table/shared'
 
 
 module MetaTable
+  class NoAttributesError < StandardError
+  end
   class Engine < ::Rails::Engine
   end
 
@@ -74,7 +76,8 @@ module MetaTable
 
   def self.preinit_table(key, args, options)
     klass = options[:klass] || key
-    define_method("render_#{key}_table") do |controller = self|
+    # + validate
+    define_method("render_#{key.to_s.pluralize}_table") do |controller = self|
       MetaTable.initialize_meta(key, controller, args, options)
     end
   end
@@ -95,14 +98,15 @@ module MetaTable
     wrap_all(content)
   end
 
-  def self.model_attributes_keys
-    if MetaTable.model_attributes.present?
-      symbols = MetaTable.model_attributes.select { |a| a.is_a? Symbol }
-      hashes  = MetaTable.model_attributes.select { |a| a.is_a? Hash }
+  def self.keys_for(controller_name, table_for)
+    columns = controller_name.constantize.send("#{table_for}_columns")
+    if columns.any?
+      symbols = columns.select { |a| a.is_a? Symbol }
+      hashes  = columns.select { |a| a.is_a? Hash }
       symbols + hashes.map { |h| h[:key] }
     else
-      []
-    end.flatten
+      raise NoAttributesError.new
+    end
   end
 
   def self.attriubtes_to_show
@@ -148,12 +152,12 @@ module MetaTable
   end
 
   def self.execute_search(scoped)
-    str = []
-    simple_searchable_columns.each do |column|
-      str << "#{column} LIKE :search"
-    end
+    str =
+      simple_searchable_columns.map do |column|
+        "#{column} LIKE :search"
+      end
     mega_string = str.join(' OR ')
-    scoped = scoped.where("#{mega_string}", {search: "%#{controller.params[:basic_search]}%"})
+    scoped.where("#{mega_string}", {search: "%#{controller.params[:basic_search]}%"})
   end
 
   def self.simple_searchable_columns
@@ -191,7 +195,7 @@ module MetaTable
   def self.render_simple_search_and_filter
     options_for_select = [['default', -1]] + MetaTableView.where(:source_controller => controller.class.name.to_s).for_user.positioned.collect{ |r| [r.name, r.id] }
     content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-      concat(link_to 'create', "/meta_table/new?key=#{MetaTable.controller.class}", class: 'create_mtw_button')
+      concat(link_to 'create', "/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}", class: 'create_mtw_button')
       concat(controller.make_erb "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
       concat(select_tag 'table_view', options_for_select(options_for_select, controller.params[:table_view]), onchange: "this.form.submit();")
     end
@@ -232,16 +236,22 @@ module MetaTable
       'no'
     when 'NilClass'
       nil
-    when 'Hash'
-      render_table_header_attribute_from_hash(attribute)
+    # when 'Hash'
+    #   render_table_header_attribute_from_hash(attribute)
     else
       attribute.to_s
     end
   end
 
+  def self.render_header_attribute(attribute)
+    attr = attribute.is_a?(Symbol) ? attribute : attribute[:key]
+    render_table_header_attribute_from_hash(attribute)
+  end
+
   def self.render_table_header_attribute_from_hash(attribute)
+    symbol = attribute.is_a? Symbol
     attribute_name = header_attribute_name(attribute)
-    if attribute[:sortable] == true
+    if symbol && klass.column_names.include?(attribute.to_s) || attribute.is_a?(Hash) && klass.column_names.include?(attribute[:key].to_s)
       link_to attribute_name, format_link_with_sortble(attribute)
     else
       attribute_name
@@ -259,24 +269,24 @@ module MetaTable
   end
 
   def self.format_link_with_sortble(attribute)
-    attribute_name = header_attribute_name(attribute)
-    current_url = controller.request.url
+    symbol = attribute.is_a?(Symbol) ? attribute : attribute[:key]
     direction = current_url.match(/sort_by=\w{1,}&\w{1,}=desc/).present? ? 'asc' : 'desc'
+    pattern   = "sort_by=#{symbol}&order=#{direction}"
     if current_url.match('sort_by=\w')
-      current_url.gsub(/sort_by=\w{1,}\&\w{1,}=(asc|desc)/, "sort_by=#{attribute[:key]}&order=#{direction}")
+      current_url.gsub(/sort_by=\w{1,}\&\w{1,}=(asc|desc)/, "#{pattern}")
     elsif current_url.match('\?\w')
-      "#{current_url}&sort_by=#{attribute[:key]}&order=#{direction}"
+      "#{current_url}&#{pattern}"
     else
-      "#{current_url}?sort_by=#{attribute[:key]}&order=#{direction}"
+      "#{current_url}?#{pattern}"
     end
   end
 
   def self.render_table_header attributes
-    concat(content_tag(:thead, nil) do  
+    concat(content_tag(:thead, nil) do
       concat(content_tag(:tr, nil) do
         attributes.map do |attribute|
           concat(content_tag(:th, nil) do
-            render_attribute(attribute)
+            render_header_attribute(attribute)
           end)
         end
       end)
@@ -285,7 +295,7 @@ module MetaTable
 
   def method_missing(meth, *args, &block)
     if meth.to_s.match(/render_/) && meth.to_s.match(/_table/)
-      'rock and handle this even before'
+      "looks like you use #{meth} method, but you need something like render_(yours_meta_table_key)_table"
     else
       super meth, *args, &block
     end

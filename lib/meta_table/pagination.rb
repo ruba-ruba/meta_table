@@ -6,16 +6,20 @@ module Pagination
 
   module ClassMethods
 
+    def current_url
+      controller.request.url
+    end
+
     def render_pagination
-      current_url = controller.request.url
       current_page = collection.current_page
-      url_wih_page = if current_url.match(/page=\d{1,}/)
-        current_url.gsub(/page=\d{1,}/, "page=#{current_page}")
-      elsif current_url.match('\?\w')
-        "#{current_url}&page=#{current_page}"
-      else
-        "#{current_url}?page=#{current_page}"
-      end
+      url_wih_page =
+        if current_url.match(/page=\d{1,}/)
+          current_url.gsub(/page=\d{1,}/, "page=#{current_page}")
+        elsif current_url.match('\?\w')
+          "#{current_url}&page=#{current_page}"
+        else
+          "#{current_url}?page=#{current_page}"
+        end
       rendered_links(url_wih_page, current_page)
     end
 
@@ -26,7 +30,7 @@ module Pagination
       current    = "#{current_page}"
       next_page  = link_to "#{current_page.to_i+1}", format_link_url(url_wih_page,collection.next_page) if collection.next_page && current_page.to_i+1 < collection.num_pages
       last_page  = link_to "last page", format_link_url(url_wih_page,collection.num_pages) unless collection.last_page?
-      links << first_page << prev_page << current << next_page << last_page 
+      links << first_page << prev_page << current << next_page << last_page
       render_links(links)
     end
 
@@ -35,14 +39,12 @@ module Pagination
     end
 
     def render_links(links)
-      rendered = links.map { |link| link }.join(' ').html_safe
+      rendered = links.join(' ').html_safe
       wrap_links(rendered)
     end
 
     def wrap_links(rendered)
-      content_tag(:div, nil, class: 'pagination') do
-        rendered
-      end
+      content_tag(:div, rendered, class: 'pagination')
     end
 
   end

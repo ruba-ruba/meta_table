@@ -1,10 +1,12 @@
 <%= form_for @mtw do |f| %>
+  <%= @mtw.errors.full_messages.join(', ') %>
+  <br/>
   <%= f.text_field :name %>
   <%= f.hidden_field :source_class, value: MetaTable.klass %>
   <%= f.hidden_field :source_controller, value: params[:key] %>
   <%= f.hidden_field :route_back, value: request.referrer %>
   <%= f.fields_for :table_columns do |tc| %>
-    <% MetaTable.model_attributes_keys.each do |attr| %>
+    <% MetaTable.keys_for(params[:key], params[:for]).each do |attr| %>
       <br>
       <%= attr %>
       <%= tc.check_box attr %>
