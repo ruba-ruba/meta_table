@@ -7,6 +7,7 @@ module MetaTable
       class_methods = <<-CLASS_METHODS
         protected
         @@#{key}_columns = []
+        @@#{key}_options = {}
 
         def #{key}_columns
           @@#{key}_columns
@@ -15,9 +16,18 @@ module MetaTable
         def #{key}_columns=(cols)
           @@#{key}_columns=cols
         end
+
+        def #{key}_options
+          @@#{key}_options
+        end
+
+        def #{key}_options=(opts)
+          @@#{key}_options=opts
+        end
       CLASS_METHODS
       self.instance_eval(class_methods)
       self.send("#{key}_columns=",args)
+      self.send("#{key}_options=",options)
     end
 
 

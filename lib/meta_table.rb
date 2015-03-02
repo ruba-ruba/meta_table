@@ -9,6 +9,7 @@ require 'erb'
 require 'meta_table/pagination'
 require 'meta_table/fetch'
 require 'meta_table/shared'
+require 'meta_table/ui_helpers'
 
 
 module MetaTable
@@ -20,6 +21,7 @@ module MetaTable
   include Fetch
   include Shared
   include Pagination
+  include UiHelpers
 
   extend ActiveSupport::Inflector
   extend ActionView::Helpers::UrlHelper
@@ -76,7 +78,6 @@ module MetaTable
 
   def self.preinit_table(key, args, options)
     klass = options[:klass] || key
-    # + validate
     define_method("render_#{key.to_s.pluralize}_table") do |controller = self|
       MetaTable.initialize_meta(key, controller, args, options)
     end
@@ -92,9 +93,8 @@ module MetaTable
   end
 
   def self.render_mtw
-    top_actions = nil
     hash_data   = get_data(attriubtes_to_show)
-    content     = (render_top_header(top_actions) + render_data_table(attriubtes_to_show, hash_data) + render_table_footer)
+    content     = (render_top_header + render_data_table(attriubtes_to_show, hash_data) + render_table_footer)
     wrap_all(content)
   end
 
@@ -139,7 +139,7 @@ module MetaTable
 
   def self.paginated_collection(scoped)
     page       = controller.params[:page] || 1
-    per_page   = table_options[:per_page] || 15
+    per_page   = controller.params[:per_page] || table_options[:per_page] || 15
     collection = scoped.page(page).per(per_page)
   end
 
@@ -184,27 +184,55 @@ module MetaTable
     end
   end
 
-  def self.render_top_header top_actions
+  def self.render_top_header
     content_tag(:div, nil, class: 'top_header_wrapper') do
+      concat(link_to_new_record)
+      concat(link_to_new_view)
       concat(render_simple_search_and_filter)
-      concat(content_tag(:div, "", class: 'clearfix'))
-    end + content_tag(:div, "", class: 'clearfix')
+      concat(clearfix)
+    end + clearfix
   end
 
+  def self.views_for_controller
+    [['default', -1]] + MetaTableView.views_for_controller(self.controller.class.to_s)
+  end
+
+  def self.link_to_new_record
+    link = <<-LINK
+<button> <%= link_to 'Create', Rails.application.routes.url_helpers.url_for(controller: controller.controller_name, action: :new) %> </button>
+LINK
+    controller.make_erb(link) rescue %Q(No route matches for #{controller.class}/new path)
+  end
+
+  def self.link_to_new_view
+    link = <<-LINK
+<button> <a href="/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}"> Create View </a> </button>
+LINK
+    controller.make_erb(link)
+  end
 
   def self.render_simple_search_and_filter
-    options_for_select = [['default', -1]] + MetaTableView.where(:source_controller => controller.class.name.to_s).for_user.positioned.collect{ |r| [r.name, r.id] }
     content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-      concat(link_to 'create', "/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}", class: 'create_mtw_button')
       concat(controller.make_erb "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
-      concat(select_tag 'table_view', options_for_select(options_for_select, controller.params[:table_view]), onchange: "this.form.submit();")
+      concat(select_tag 'table_view', options_for_select(MetaTable.views_for_controller, controller.params[:table_view]), onchange: "this.form.submit();")
     end
   end
 
   def self.render_table_footer
     content_tag(:div, nil, class: 'table_footer') do
+      concat(render_per_page_choises)
       concat(render_pagination)
-      concat(content_tag(:div, "", class: 'clearfix'))
+      concat(clearfix)
+    end
+  end
+
+  def self.render_per_page_choises
+    url = controller.request.url.gsub(/(&)per_page=\d{1,}/, '')
+    url_pattern = ->(num){ "#{url}&per_page=#{num}" }
+    content_tag(:div, nil) do
+      [15, 30, 60].map do |num|
+        link_to num, url_pattern.call(num)
+      end.join(' | ').html_safe
     end
   end
 

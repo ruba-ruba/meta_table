@@ -1,6 +1,7 @@
 <%= form_for @mtw do |f| %>
   <%= @mtw.errors.full_messages.join(', ') %>
   <br/>
+  <%= f.label :name %>
   <%= f.text_field :name %>
   <%= f.hidden_field :source_class, value: MetaTable.klass %>
   <%= f.hidden_field :source_controller, value: params[:key] %>

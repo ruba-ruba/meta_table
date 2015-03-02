@@ -101,8 +101,9 @@ use hash syntax to specify more details
 ### Current = "0.0.2.alpha"
 
 ### Next = "0.0.3"
-- removed sortable lfag. Now all cols which possible are sortable
+- removed sortable fag. Now all cols which possible are sortable
 - display: false
+- per page choises
 
 #### Plan
 - Add I18n support for labels

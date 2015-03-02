@@ -1,5 +1,5 @@
 class MetaTableViewsController < ApplicationController
-  layout false
+  # layout false
 
   def new
     # binding.pry

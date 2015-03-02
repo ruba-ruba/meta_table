@@ -8,6 +8,7 @@ class MetaTableView < ActiveRecord::Base
   serialize :table_columns
 
   scope :positioned, -> { order(:position) }
+  scope :for_controller, ->(controller_name) { where(:source_controller => controller_name) }
 
   scope :for_user, ->(user=nil) {
     if user.present?
@@ -25,6 +26,10 @@ class MetaTableView < ActiveRecord::Base
 
   def enabled_attributes
     table_columns.select {|k,v| v == '1'}
+  end
+
+  def self.views_for_controller(controller_name)
+    for_controller(controller_name).collect{ |r| [r.name, r.id] }
   end
 
 end
