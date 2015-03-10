@@ -1,5 +1,6 @@
-require "meta_table/version"
-require "meta_table/railtie"              if defined?(Rails)
+require 'uri'
+require 'meta_table/version'
+require 'meta_table/railtie'              if defined?(Rails)
 require 'meta_table/model_additions'      if defined?(Rails)
 require 'meta_table/controller_additions' if defined?(Rails)
 require 'action_view'                     if defined?(Rails)
@@ -40,14 +41,12 @@ module MetaTable
   def self.make_record_actions(record, actions)
     actions.map do |action|
       if action.is_a?(Array)
-        action_name     = action[0]
-        namespace       = action[1]
-        classes         = action[2]
+        action_name, namespace = action
         controller_with_namespace = "#{namespace}/#{controller.controller_name}"
       end
       controller_with_namespace ||= controller.controller_name
       action_name ||= action
-      route = Rails.application.routes.url_helpers.url_for({host: controller.request.host_with_port, controller: controller_with_namespace, action: action_name, id: record.id}) rescue nil
+      route = Rails.application.routes.url_helpers.url_for({controller: controller_with_namespace, action: action_name, id: record.id, only_path: true}) rescue nil
       if action_name == :destroy
         link_to action_name, route, method: :delete, data: {:confirm => 'Are you sure?'}
       elsif action.is_a?(String)
@@ -58,14 +57,13 @@ module MetaTable
     end.join(' ').html_safe
   end
 
-  # i suppose this shit should care about strings
   def self.implicit_render(record, attribute)
     renderer = attribute[:render_text]
     if renderer.is_a?(String) && erb?(renderer)
       controller.make_erb(renderer, record)
     elsif renderer.is_a? String
-      eval(renderer)
-    elsif renderer.is_a?(Array) && attribute[:key] == :actions # probably it is more than we need
+      eval(renderer) rescue "could not eval #{renderer}"
+    elsif renderer.is_a?(Array) && attribute[:key] == :actions
       make_record_actions(record, renderer)
     else
       renderer
@@ -87,7 +85,7 @@ module MetaTable
     MetaTable.klass            = key.to_s.singularize.camelize.constantize
     MetaTable.controller       = controller
     MetaTable.model_attributes = attributes
-    MetaTable.table_options    = options || {}
+    MetaTable.table_options    = options
     MetaTable.collection       = initialize_collection
     render_mtw
   end
@@ -187,7 +185,6 @@ module MetaTable
   def self.render_top_header
     content_tag(:div, nil, class: 'top_header_wrapper') do
       concat(link_to_new_record)
-      concat(link_to_new_view)
       concat(render_simple_search_and_filter)
       concat(clearfix)
     end + clearfix
@@ -198,23 +195,35 @@ module MetaTable
   end
 
   def self.link_to_new_record
-    link = <<-LINK
-<button> <%= link_to 'Create', Rails.application.routes.url_helpers.url_for(controller: controller.controller_name, action: :new) %> </button>
-LINK
-    controller.make_erb(link) rescue %Q(No route matches for #{controller.class}/new path)
+    "<button> <a href='#{controller.request.url}/new'> Create </a> </button>".html_safe
   end
 
   def self.link_to_new_view
-    link = <<-LINK
-<button> <a href="/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}"> Create View </a> </button>
-LINK
-    controller.make_erb(link)
+    "<button class='create_view'> <a href='/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}'> + </a> </button>".html_safe
+  end
+
+  def self.link_to_edit_view
+    if controller.params[:table_view].to_i > 0
+      content_tag(:button, nil, class: 'edit_view') do
+        link_to 'E', "/meta_table/#{controller.params[:table_view]}/edit"
+      end
+    end
+  end
+
+  def self.search_input
+    text_field_tag :basic_search, controller.params[:basic_search], :class => 'meta_table_search_input'
+  end
+
+  def self.select_view
+    select_tag 'table_view', options_for_select(MetaTable.views_for_controller, controller.params[:table_view]), onchange: "this.form.submit();"
   end
 
   def self.render_simple_search_and_filter
     content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-      concat(controller.make_erb "<%= text_field_tag :basic_search, controller.params[:basic_search], class: 'meta_table_search_input' %>")
-      concat(select_tag 'table_view', options_for_select(MetaTable.views_for_controller, controller.params[:table_view]), onchange: "this.form.submit();")
+      concat(link_to_new_view)
+      concat(link_to_edit_view)
+      concat(search_input)
+      concat(select_view)
     end
   end
 
@@ -227,9 +236,10 @@ LINK
   end
 
   def self.render_per_page_choises
-    url = controller.request.url.gsub(/(&)per_page=\d{1,}/, '')
-    url_pattern = ->(num){ "#{url}&per_page=#{num}" }
-    content_tag(:div, nil) do
+    url = controller.request.url.gsub(/(&)per_page=\d{1,4}/, '')
+    char = url.match(/\?/) ? '&' : '?'
+    url_pattern = ->(num){ "#{url}#{char}per_page=#{num}" }
+    content_tag(:div, nil, class: 'per_page_choises') do
       [15, 30, 60].map do |num|
         link_to num, url_pattern.call(num)
       end.join(' | ').html_safe
@@ -252,37 +262,32 @@ LINK
 
   def self.render_attribute(attribute)
     case attribute.class.to_s
-    when 'String'
-      attribute
-    when 'Array', 'Fixnum'
+    when 'String', 'Array', 'Fixnum'
       attribute.to_s
     when 'Symbol' # this is part of header's => => => remove this to separate method
       attribute.to_s.try(:humanize)
     when 'TrueClass'
-      'yes'
+      'Yes'
     when 'FalseClass'
-      'no'
+      'No'
     when 'NilClass'
       nil
-    # when 'Hash'
-    #   render_table_header_attribute_from_hash(attribute)
     else
-      attribute.to_s
+      attribute
     end
   end
 
   def self.render_header_attribute(attribute)
-    attr = attribute.is_a?(Symbol) ? attribute : attribute[:key]
-    render_table_header_attribute_from_hash(attribute)
+    attr      = attribute.is_a?(Symbol) ? attribute : attribute[:key]
+    attr_name = header_attribute_name(attribute)
+    render_table_header_attribute_from_hash(attr, attr_name)
   end
 
-  def self.render_table_header_attribute_from_hash(attribute)
-    symbol = attribute.is_a? Symbol
-    attribute_name = header_attribute_name(attribute)
-    if symbol && klass.column_names.include?(attribute.to_s) || attribute.is_a?(Hash) && klass.column_names.include?(attribute[:key].to_s)
-      link_to attribute_name, format_link_with_sortble(attribute)
+  def self.render_table_header_attribute_from_hash(attr, attr_name)
+    if klass.column_names.include?(attr.to_s)
+      link_to attr_name, format_link_with_sortble(attr)
     else
-      attribute_name
+      attr_name
     end
   end
 
@@ -296,8 +301,8 @@ LINK
     end.to_s.humanize # + I18n here
   end
 
-  def self.format_link_with_sortble(attribute)
-    symbol = attribute.is_a?(Symbol) ? attribute : attribute[:key]
+  def self.format_link_with_sortble(attr)
+    symbol = attr.to_sym
     direction = current_url.match(/sort_by=\w{1,}&\w{1,}=desc/).present? ? 'asc' : 'desc'
     pattern   = "sort_by=#{symbol}&order=#{direction}"
     if current_url.match('sort_by=\w')
@@ -328,5 +333,4 @@ LINK
       super meth, *args, &block
     end
   end
-
 end

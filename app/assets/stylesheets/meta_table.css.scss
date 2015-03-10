@@ -2,7 +2,9 @@
   width: 100%;
   margin: 0;
   .top_header_wrapper{
+    outline: 1px solid gray;
     width: 100%;
+    height: 37px;
     margin: 0;
     button{
       padding: 0px;
@@ -12,24 +14,26 @@
       }
     }
     #meta_table_search_form{
-      margin-left: 20px;
-      width: 20%;
       float: right;
+      width: 340px;
       input{
+        width: 150px;
         margin: 0px;
-        width: 40%;
         float: right;
       }
       select{
-        float: left;
+        width: 150px;
+        float: right;
         margin: 0px;
-        width: 40%;
       }
-      a{
-       float: left;
-        margin: 0px;
-        width: 20%;
+      button.edit_view, button.create_view{
+        width: 20px;
+        height: 37px;
+        margin:0px;
+        padding: 0px;
+        border-right: 1px solid green;
       }
+
     }
     #table_view{
       float: right;
@@ -41,6 +45,10 @@
     margin: 0;
   }
   .table_footer{
+    outline: 1px solid gray;
+    .per_page_choises{
+      display: inline-block;
+    }
     .pagination{
       float: right;
     }

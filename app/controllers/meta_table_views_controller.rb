@@ -1,13 +1,14 @@
 class MetaTableViewsController < ApplicationController
   # layout false
 
+  before_action :set_mtw, only: [:edit, :update]
+
   def new
     # binding.pry
     @mtw = MetaTableView.new
   end
 
   def edit
-    @mtw = MetaTableView.find params[:id]
     render template: 'meta_table_views/new'
   end
 
@@ -21,7 +22,7 @@ class MetaTableViewsController < ApplicationController
   end
 
   def update
-    @mtw = MetaTableView.new(params[:meta_table_view])
+    @mtw.attributes = params[:meta_table_view]
     if @mtw.save
       redirect_to params[:meta_table_view][:route_back]
     else
@@ -42,6 +43,10 @@ class MetaTableViewsController < ApplicationController
     else
       str + "?table_view=#{@mtw.id}"
     end
+  end
+
+  def set_mtw
+    @mtw = MetaTableView.find params[:id]
   end
   
 end

@@ -25,7 +25,11 @@ class MetaTableView < ActiveRecord::Base
   end
 
   def enabled_attributes
-    table_columns.select {|k,v| v == '1'}
+    if table_columns
+      table_columns.select {|k,v| v == '1'}
+    else
+      []
+    end
   end
 
   def self.views_for_controller(controller_name)
