@@ -1,4 +1,4 @@
-module Fetch
+module FetchData
 
   def self.included(receiver)
     receiver.extend ClassMethods

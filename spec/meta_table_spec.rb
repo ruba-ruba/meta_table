@@ -1,3 +1,0 @@
-describe MetaTable do
-
-end

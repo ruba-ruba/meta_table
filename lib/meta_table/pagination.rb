@@ -23,10 +23,10 @@ module Pagination
       rendered_links(url_wih_page, current_page)
     end
 
-    def rendered_links(url_wih_page, current_page) 
+    def rendered_links(url_wih_page, current_page)
       links = []
-      first_page = link_to 'first page', format_link_url(url_wih_page, 1) unless collection.first_page? 
-      prev_page  = link_to "#{current_page.to_i-1}", format_link_url(url_wih_page,current_page.to_i-1) if !collection.first_page? && current_page.to_i-1 <= 0 
+      first_page = link_to 'first page', format_link_url(url_wih_page, 1) unless collection.first_page?
+      prev_page  = link_to "#{current_page.to_i-1}", format_link_url(url_wih_page,current_page.to_i-1) if !collection.first_page? && current_page.to_i-1 <= 0
       current    = "#{current_page}"
       next_page  = link_to "#{current_page.to_i+1}", format_link_url(url_wih_page,collection.next_page) if collection.next_page && current_page.to_i+1 < collection.num_pages
       last_page  = link_to "last page", format_link_url(url_wih_page,collection.num_pages) unless collection.last_page?

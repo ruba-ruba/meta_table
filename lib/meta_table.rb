@@ -8,10 +8,11 @@ require 'action_controller'               if defined?(Rails)
 require 'erb'
 
 require 'meta_table/pagination'
-require 'meta_table/fetch'
+require 'meta_table/fetch_data'
 require 'meta_table/shared'
 require 'meta_table/ui_helpers'
 
+require 'kaminari'
 
 module MetaTable
   class NoAttributesError < StandardError
@@ -19,7 +20,7 @@ module MetaTable
   class Engine < ::Rails::Engine
   end
 
-  include Fetch
+  include FetchData
   include Shared
   include Pagination
   include UiHelpers
@@ -139,6 +140,8 @@ module MetaTable
     page       = controller.params[:page] || 1
     per_page   = controller.params[:per_page] || table_options[:per_page] || 15
     collection = scoped.page(page).per(per_page)
+    # or go with will paginate
+    # collection = scoped.paginate(:page => page, :per_page => per_page)
   end
 
   def self.basic_search(scoped)

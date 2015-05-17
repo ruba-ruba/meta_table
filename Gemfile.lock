@@ -3,7 +3,6 @@ PATH
   specs:
     meta_table (0.0.2.alpha)
       kaminari (~> 0.16.1)
-      rspec (~> 3.1.0)
       will_paginate (~> 3.0.7)
 
 GEM
@@ -36,19 +35,20 @@ GEM
     rack (1.5.2)
     rack-test (0.6.3)
       rack (>= 1.0)
-    rspec (3.1.0)
-      rspec-core (~> 3.1.0)
-      rspec-expectations (~> 3.1.0)
-      rspec-mocks (~> 3.1.0)
-    rspec-core (3.1.5)
-      rspec-support (~> 3.1.0)
-    rspec-expectations (3.1.2)
+    rspec (3.2.0)
+      rspec-core (~> 3.2.0)
+      rspec-expectations (~> 3.2.0)
+      rspec-mocks (~> 3.2.0)
+    rspec-core (3.2.1)
+      rspec-support (~> 3.2.0)
+    rspec-expectations (3.2.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.1.0)
-    rspec-mocks (3.1.2)
-      rspec-support (~> 3.1.0)
-    rspec-support (3.1.1)
-    thread_safe (0.3.4)
+      rspec-support (~> 3.2.0)
+    rspec-mocks (3.2.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.2.0)
+    rspec-support (3.2.2)
+    thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     will_paginate (3.0.7)
@@ -58,3 +58,4 @@ PLATFORMS
 
 DEPENDENCIES
   meta_table!
+  rspec (~> 3.2.0)

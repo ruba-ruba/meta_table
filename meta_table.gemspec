@@ -18,5 +18,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency('kaminari', '~> 0.16.1')
   s.add_dependency('will_paginate', '~> 3.0.7')
-  s.add_dependency('rspec', '~> 3.1.0')
+
+  s.add_development_dependency('rspec', '~> 3.2.0')
 end
