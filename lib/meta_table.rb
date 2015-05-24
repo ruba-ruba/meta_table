@@ -246,8 +246,8 @@ module MetaTable
     char = url.match(/\?/) ? '&' : '?'
     url_pattern = ->(num){ "#{url}#{char}per_page=#{num}" }
     content_tag(:div, nil, class: 'per_page_choises') do
-      [15, 30, 60].map do |num|
-        link_to num, url_pattern.call(num)
+      [5, 15, 30, 60].map do |num|
+        link_to num, url_pattern.call(num), remote: true
       end.join(' | ').html_safe
     end
   end
