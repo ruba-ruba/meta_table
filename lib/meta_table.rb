@@ -291,7 +291,7 @@ module MetaTable
 
   def self.render_table_header_attribute_from_hash(attr, attr_name)
     if klass.column_names.include?(attr.to_s)
-      link_to attr_name, format_link_with_sortble(attr)
+      link_to attr_name, format_link_with_sortble(attr), remote: true
     else
       attr_name
     end
