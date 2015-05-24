@@ -7,7 +7,6 @@ require 'action_view'                     if defined?(Rails)
 require 'action_controller'               if defined?(Rails)
 require 'erb'
 
-require 'meta_table/fetch_data'
 require 'meta_table/shared'
 require 'meta_table/ui_helpers'
 
@@ -19,7 +18,6 @@ module MetaTable
   class Engine < ::Rails::Engine
   end
 
-  include FetchData
   include Shared
   include UiHelpers
 
@@ -105,8 +103,7 @@ module MetaTable
   end
 
   def self.content
-    hash_data   = get_data(attriubtes_to_show)
-    content  = render_data_table(attriubtes_to_show, hash_data)
+    render_data_table(attributes_to_show, get_data)
   end
 
   def self.footer
@@ -127,24 +124,45 @@ module MetaTable
     end
   end
 
-  def self.attriubtes_to_show
+  def self.attributes_to_show
     dynamic_view_attributes || enabled_attributes
   end
 
   def self.dynamic_view_attributes
-    if mtw = MetaTableView.find_by_id(controller.params[:table_view])
-      model_attributes.select do |a|
-        if a.is_a?(Hash)
-          mtw.enabled_attributes.include?(a[:key].to_s)
-        else
-          mtw.enabled_attributes.include?(a.to_s)
-        end
-      end
+    return nil unless mtw = MetaTableView.find_by_id(controller.params[:table_view])
+    model_attributes.select do |a|
+      key = a.is_a?(Hash) ? a[:key] : a
+      mtw.enabled_attributes.include?(key.to_s)
     end
   end
 
   def self.enabled_attributes
     model_attributes.select { |attr| attr.is_a?(Symbol) || attr[:display] != false }
+  end
+
+  def self.get_data
+    collection.map do |record|
+      res = attributes_to_show.map do |attr|
+        if attr.is_a?(Symbol)
+          record.send attr
+        else
+          fetch_rely_on_hash(record, attr)
+        end
+      end
+      res.define_singleton_method(:record) do
+        record
+      end
+      res
+    end
+  end
+
+  def self.fetch_rely_on_hash(record, attribute)
+    attr = attribute[:key]
+    if attribute[:render_text]
+      implicit_render(record, attribute)
+    else
+      record.deep_send(attr)
+    end
   end
 
   def self.initialize_collection
@@ -255,7 +273,7 @@ module MetaTable
   def self.render_table_data hash_data
     concat(content_tag(:tbody, nil) do
       hash_data.map do |row|
-        concat(content_tag(:tr, nil) do
+        concat(content_tag(:tr, nil, id: "#{row_id(row)}") do
           row.map do |attribute|
             concat(content_tag(:td, nil) do
               render_attribute(attribute)
@@ -264,6 +282,10 @@ module MetaTable
         end)
       end
     end)
+  end
+
+  def self.row_id(row)
+    "#{klass.to_s.downcase}_#{row.record.id}"
   end
 
   def self.render_attribute(attribute)
