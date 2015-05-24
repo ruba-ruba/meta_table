@@ -1,0 +1,8 @@
+<div class='meta_wrapper'>
+  <%= render partial: '/meta_table_views/header', :locals => {header: header} %>
+  <%= content %>
+  <div class='table_footer'>
+    <%= footer[:per_page_choises] %>
+    <%= paginate collection %>
+  </div>
+</div>

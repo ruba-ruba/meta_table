@@ -5,7 +5,7 @@ require 'rails/generators/active_record'
 class Rails::MtwGenerator < Rails::Generators::NamedBase
   include Rails::Generators::Migration
   source_root File.expand_path('../templates', __FILE__)
-  argument :name, :type => :string, :default => ""  
+  argument :name, :type => :string, :default => ""
 
   def self.next_migration_number(path)
     ActiveRecord::Generators::Base.next_migration_number(path)

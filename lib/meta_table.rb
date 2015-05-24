@@ -7,7 +7,6 @@ require 'action_view'                     if defined?(Rails)
 require 'action_controller'               if defined?(Rails)
 require 'erb'
 
-require 'meta_table/pagination'
 require 'meta_table/fetch_data'
 require 'meta_table/shared'
 require 'meta_table/ui_helpers'
@@ -22,7 +21,6 @@ module MetaTable
 
   include FetchData
   include Shared
-  include Pagination
   include UiHelpers
 
   extend ActiveSupport::Inflector
@@ -38,6 +36,10 @@ module MetaTable
   mattr_accessor :collection
   mattr_accessor :table_options
   mattr_accessor :model_attributes
+
+  def self.current_url
+    controller.request.url
+  end
 
   def self.make_record_actions(record, actions)
     actions.map do |action|
@@ -92,10 +94,27 @@ module MetaTable
   end
 
   def self.render_mtw
-    hash_data   = get_data(attriubtes_to_show)
-    content     = (render_top_header + render_data_table(attriubtes_to_show, hash_data) + render_table_footer)
-    wrap_all(content)
+    self.controller.render '/meta_table_views/index', locals: {header: header, content: content, footer: footer, collection: collection}
   end
+
+  # table content
+  # table content
+
+  def self.header
+    {link_to_new_record: link_to_new_record, simple_search_and_filter: simple_search_and_filter}
+  end
+
+  def self.content
+    hash_data   = get_data(attriubtes_to_show)
+    content  = render_data_table(attriubtes_to_show, hash_data)
+  end
+
+  def self.footer
+    {per_page_choises: per_page_choises}
+  end
+
+  # table content
+  # table content
 
   def self.keys_for(controller_name, table_for)
     columns = controller_name.constantize.send("#{table_for}_columns")
@@ -137,11 +156,10 @@ module MetaTable
   end
 
   def self.paginated_collection(scoped)
-    page       = controller.params[:page] || 1
+    page       = controller.params[:page]     || 1
     per_page   = controller.params[:per_page] || table_options[:per_page] || 15
+    # useless assigment ???
     collection = scoped.page(page).per(per_page)
-    # or go with will paginate
-    # collection = scoped.paginate(:page => page, :per_page => per_page)
   end
 
   def self.basic_search(scoped)
@@ -185,14 +203,6 @@ module MetaTable
     end
   end
 
-  def self.render_top_header
-    content_tag(:div, nil, class: 'top_header_wrapper') do
-      concat(link_to_new_record)
-      concat(render_simple_search_and_filter)
-      concat(clearfix)
-    end + clearfix
-  end
-
   def self.views_for_controller
     [['default', -1]] + MetaTableView.views_for_controller(self.controller.class.to_s)
   end
@@ -221,7 +231,7 @@ module MetaTable
     select_tag 'table_view', options_for_select(MetaTable.views_for_controller, controller.params[:table_view]), onchange: "this.form.submit();"
   end
 
-  def self.render_simple_search_and_filter
+  def self.simple_search_and_filter
     content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
       concat(link_to_new_view)
       concat(link_to_edit_view)
@@ -230,15 +240,7 @@ module MetaTable
     end
   end
 
-  def self.render_table_footer
-    content_tag(:div, nil, class: 'table_footer') do
-      concat(render_per_page_choises)
-      concat(render_pagination)
-      concat(clearfix)
-    end
-  end
-
-  def self.render_per_page_choises
+  def self.per_page_choises
     url = controller.request.url.gsub(/(&)per_page=\d{1,4}/, '')
     char = url.match(/\?/) ? '&' : '?'
     url_pattern = ->(num){ "#{url}#{char}per_page=#{num}" }
