@@ -148,9 +148,10 @@ module MetaTable
   end
 
   def self.initialize_collection
-    scoped = klass.all
+    scoped = klass.all # what about scoped in rails 3 ???
+    scoped = scoped.includes(table_options[:includes]) if table_options[:includes]
     scoped = eval("scoped.order('#{ordering}')") if ordering
-    deep_send_with_object(scoped, table_options[:scope]) if table_options[:scope]
+    scoped = deep_send_with_object(scoped, table_options[:scope]) if table_options[:scope]
     scoped = basic_search(scoped)
     paginated_collection(scoped)
   end
