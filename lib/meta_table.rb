@@ -65,7 +65,7 @@ module MetaTable
     if renderer.is_a?(String) && erb?(renderer)
       controller.make_erb(renderer, record)
     elsif renderer.is_a? String
-      eval(renderer) rescue "could not eval #{renderer}"
+      eval(renderer) rescue "caught exception #{$!}!"
     elsif renderer.is_a?(Array) && attribute[:key] == :actions
       make_record_actions(record, renderer)
     else
