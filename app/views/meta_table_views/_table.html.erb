@@ -1,0 +1,18 @@
+<table clsas='data_table'>
+  <thead>
+    <tr>
+      <% content.current_attributes.each do |attribute| %>
+        <th> <%= MetaTable.render_header_attribute(attribute) %></th>
+      <% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% content.collection.each do |record| %>
+      <tr>
+        <% content.current_attributes.each do |attr| %>
+          <td><%= MetaTable.implicit_render(record, attr) %></td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

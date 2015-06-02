@@ -1,2 +1,2 @@
-$(".data_table").html("<%= escape_javascript(render partial: '/meta_table_views/content', locals: { content: MetaTable.content } ) %>");
+$(".meta_wrapper > table").html("<%= escape_javascript(render partial: '/meta_table_views/table', locals: { content: MetaTable.content } ) %>");
 $(".table_footer").html("<%= escape_javascript(render partial: '/meta_table_views/footer', locals: { footer: MetaTable.footer, collection: MetaTable.collection } ) %>");

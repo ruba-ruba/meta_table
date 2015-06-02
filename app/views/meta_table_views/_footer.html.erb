@@ -1,4 +1,8 @@
 <div class='table_footer'>
-  <%= footer[:per_page_choises] %>
+  <div class='per_page_choises'>
+    <%= footer[:per_page_choises].map do |num| %>
+      <% link_to num, url_for(params.merge(per_page: num)), remote: true %>
+    <% end.join(' | ').html_safe %>
+  </div>
   <%= paginate collection, :remote => true %>
 </div>

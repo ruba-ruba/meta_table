@@ -46,7 +46,7 @@ Example Usage
           {key: :user, method: :email, label: "Created By Email"},
           {key: :actions, label: 'Actions From Attrs', render_text: [:show, [:edit, :admin],[:destroy, :admin], "<%= link_to 'Edit', edit_admin_post_path(record), class: 'button small' %>"]}
          ],
-         {:scope => 'desc.articles', per_page: 4, includes: [:categories]}
+         {:scope => 'desc.articles', per_page_choises: [4, 12, 24], includes: [:categories]}
 
     def index
       @table = render_posts_table

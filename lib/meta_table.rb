@@ -59,15 +59,20 @@ module MetaTable
   end
 
   def self.implicit_render(record, attribute)
-    renderer = attribute[:render_text]
-    if renderer.is_a?(String) && erb?(renderer)
-      controller.make_erb(renderer, record)
-    elsif renderer.is_a? String
-      eval(renderer) rescue "caught exception #{$!}!"
-    elsif renderer.is_a?(Array) && attribute[:key] == :actions
-      make_record_actions(record, renderer)
+    return record.send(attribute) if attribute.is_a?(Symbol)
+
+    if renderer = attribute[:render_text]
+      if renderer.is_a?(String) && erb?(renderer)
+        controller.make_erb(renderer, record)
+      elsif renderer.is_a? String
+        eval(renderer) rescue "caught exception #{$!}!"
+      elsif renderer.is_a?(Array) && attribute[:key] == :actions
+        make_record_actions(record, renderer)
+      else
+        renderer
+      end
     else
-      renderer
+      record.deep_send(attribute[:key])
     end
   end
 
@@ -92,7 +97,11 @@ module MetaTable
   end
 
   def self.render_mtw
-    self.controller.render '/meta_table_views/index', locals: {header: header, content: content, footer: footer, collection: collection}
+    self.controller.render '/meta_table_views/index', locals: locals
+  end
+
+  def self.locals
+    {header: header, content: content, footer: footer, collection: collection}
   end
 
   # table content
@@ -103,7 +112,13 @@ module MetaTable
   end
 
   def self.content
-    render_data_table(attributes_to_show, get_data)
+    # {current_attributes: attributes_to_show, collection: collection}
+    attributes = self.attributes_to_show
+    collection = self.collection
+    content = Object.new()
+    content.define_singleton_method(:current_attributes) {attributes}
+    content.define_singleton_method(:collection)         {collection}
+    content
   end
 
   def self.footer
@@ -140,31 +155,6 @@ module MetaTable
     model_attributes.select { |attr| attr.is_a?(Symbol) || attr[:display] != false }
   end
 
-  def self.get_data
-    collection.map do |record|
-      res = attributes_to_show.map do |attr|
-        if attr.is_a?(Symbol)
-          record.send attr
-        else
-          fetch_rely_on_hash(record, attr)
-        end
-      end
-      res.define_singleton_method(:record) do
-        record
-      end
-      res
-    end
-  end
-
-  def self.fetch_rely_on_hash(record, attribute)
-    attr = attribute[:key]
-    if attribute[:render_text]
-      implicit_render(record, attribute)
-    else
-      record.deep_send(attr)
-    end
-  end
-
   def self.initialize_collection
     scoped = klass.all # what about scoped in rails 3 ???
     scoped = scoped.includes(table_options[:includes]) if table_options[:includes]
@@ -176,7 +166,7 @@ module MetaTable
 
   def self.paginated_collection(scoped)
     page       = controller.params[:page]     || 1
-    per_page   = controller.params[:per_page] || table_options[:per_page] || 15
+    per_page   = controller.params[:per_page] || per_page_choises.first
     # useless assigment ???
     collection = scoped.page(page).per(per_page)
   end
@@ -208,18 +198,6 @@ module MetaTable
     order_column = controller.params[:sort_by]
     order_direction = controller.params[:order]
     "#{order_column} #{order_direction}" if klass.column_names.include?(order_column) && ['asc', 'desc'].include?(order_direction)
-  end
-
-  def self.wrap_all(content)
-    content_tag(:div, nil, class: 'meta_wrapper') do
-      content
-    end
-  end
-
-  def self.render_data_table(attributes, hash_data)
-    content_tag(:table, nil, class: "data_table") do
-      render_table_header(attributes) + render_table_data(hash_data)
-    end
   end
 
   def self.views_for_controller
@@ -260,32 +238,7 @@ module MetaTable
   end
 
   def self.per_page_choises
-    url = controller.request.url.gsub(/(&)per_page=\d{1,4}/, '')
-    char = url.match(/\?/) ? '&' : '?'
-    url_pattern = ->(num){ "#{url}#{char}per_page=#{num}" }
-    content_tag(:div, nil, class: 'per_page_choises') do
-      [5, 15, 30, 60].map do |num|
-        link_to num, url_pattern.call(num), remote: true
-      end.join(' | ').html_safe
-    end
-  end
-
-  def self.render_table_data hash_data
-    concat(content_tag(:tbody, nil) do
-      hash_data.map do |row|
-        concat(content_tag(:tr, nil, id: "#{row_id(row)}") do
-          row.map do |attribute|
-            concat(content_tag(:td, nil) do
-              render_attribute(attribute)
-            end)
-          end
-        end)
-      end
-    end)
-  end
-
-  def self.row_id(row)
-    "#{klass.to_s.downcase}_#{row.record.id}"
+    table_options[:per_page_choises].presence || [5,15,30]
   end
 
   def self.render_attribute(attribute)
@@ -340,18 +293,6 @@ module MetaTable
     else
       "#{current_url}?#{pattern}"
     end
-  end
-
-  def self.render_table_header attributes
-    concat(content_tag(:thead, nil) do
-      concat(content_tag(:tr, nil) do
-        attributes.map do |attribute|
-          concat(content_tag(:th, nil) do
-            render_header_attribute(attribute)
-          end)
-        end
-      end)
-    end)
   end
 
   def method_missing(meth, *args, &block)
