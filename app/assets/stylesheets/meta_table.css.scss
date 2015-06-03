@@ -48,6 +48,9 @@
     outline: 1px solid gray;
     .per_page_choises{
       display: inline-block;
+      .current_per_page{
+        font-weight: bold;
+      }
     }
     .pagination{
       float: right;

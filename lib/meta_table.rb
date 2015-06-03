@@ -237,6 +237,10 @@ module MetaTable
     end
   end
 
+  def self.per_page_choise
+    controller.params[:per_page].present? ? controller.params[:per_page].to_i : per_page_choises.first
+   end
+
   def self.per_page_choises
     table_options[:per_page_choises].presence || [5,15,30]
   end
@@ -284,7 +288,7 @@ module MetaTable
 
   def self.format_link_with_sortble(attr)
     symbol = attr.to_sym
-    direction = current_url.match(/sort_by=\w{1,}&\w{1,}=desc/).present? ? 'asc' : 'desc'
+    direction = current_url.match(/sort_by=\w{1,}&\w{1,}=asc/).present? ? 'desc': 'asc'
     pattern   = "sort_by=#{symbol}&order=#{direction}"
     if current_url.match('sort_by=\w')
       current_url.gsub(/sort_by=\w{1,}\&\w{1,}=(asc|desc)/, "#{pattern}")
