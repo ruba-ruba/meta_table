@@ -1,5 +1,18 @@
 <div class='top_header_wrapper'>
-  <%= header[:link_to_new_record] %>
-  <%= header[:simple_search_and_filter] %>
+  <button>
+    <a href=<%= header[:link_to_new_record] %>> Create </a>
+  </button>
+  <%= form_tag({}, {method: 'get', id: 'meta_table_search_form', remote: true}) do %>
+    <button class='create_view'>
+      <a href=<%= "/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}" %>> + </a>
+    </button>
+    <% if params[:table_view].to_i > 0 %>
+      <button class='edit_view'>
+        <a href=<%= "/meta_table/#{params[:table_view]}/edit" %>> E </a>
+      </button>
+    <% end %>
+    <%= text_field_tag :basic_search, params[:basic_search], :class => 'meta_table_search_input' %>
+    <%= select_tag 'table_view', options_for_select(MetaTable.views_for_controller, params[:table_view]), onchange: "this.form.submit();" %>
+  <% end %>
   <div class='clearfix'></div>
 </div>

@@ -108,7 +108,8 @@ module MetaTable
   # table content
 
   def self.header
-    {link_to_new_record: link_to_new_record, simple_search_and_filter: simple_search_and_filter}
+    {link_to_new_record: link_to_new_record}
+    # simple_search_and_filter: simple_search_and_filter
   end
 
   def self.content
@@ -205,36 +206,7 @@ module MetaTable
   end
 
   def self.link_to_new_record
-    "<button> <a href='#{controller.request.url}/new'> Create </a> </button>".html_safe
-  end
-
-  def self.link_to_new_view
-    "<button class='create_view'> <a href='/meta_table/new?key=#{MetaTable.controller.class}&for=#{MetaTable.klass.to_s.downcase}'> + </a> </button>".html_safe
-  end
-
-  def self.link_to_edit_view
-    if controller.params[:table_view].to_i > 0
-      content_tag(:button, nil, class: 'edit_view') do
-        link_to 'E', "/meta_table/#{controller.params[:table_view]}/edit"
-      end
-    end
-  end
-
-  def self.search_input
-    text_field_tag :basic_search, controller.params[:basic_search], :class => 'meta_table_search_input'
-  end
-
-  def self.select_view
-    select_tag 'table_view', options_for_select(MetaTable.views_for_controller, controller.params[:table_view]), onchange: "this.form.submit();"
-  end
-
-  def self.simple_search_and_filter
-    content_tag(:form, :method => 'get', id: 'meta_table_search_form') do
-      concat(link_to_new_view)
-      concat(link_to_edit_view)
-      concat(search_input)
-      concat(select_view)
-    end
+    "#{controller.request.url}/new"
   end
 
   def self.per_page_choise
