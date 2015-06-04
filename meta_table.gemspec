@@ -20,4 +20,6 @@ Gem::Specification.new do |s|
   s.add_dependency('will_paginate', '~> 3.0.7')
 
   s.add_development_dependency('rspec', '~> 3.2.0')
+  s.add_development_dependency "pry"
+  s.add_development_dependency "pry-byebug"
 end

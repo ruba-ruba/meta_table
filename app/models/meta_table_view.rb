@@ -2,7 +2,7 @@ class MetaTableView < ActiveRecord::Base
 
   attr_accessor :route_back
 
-  validate :name, :source_class, :table_columns, presence: true
+  validates :name, :source_class, :table_columns, presence: true
   validate :at_least_one_selected
 
   serialize :table_columns
