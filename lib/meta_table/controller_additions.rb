@@ -4,32 +4,6 @@ module MetaTable
     def meta_table(key, args, options)
       MetaTable.preinit_table(key, args, options)
 
-      # class_methods = <<-CLASS_METHODS
-      #   protected
-      #   @@#{key}_columns = []
-      #   @@#{key}_options = {}
-
-      #   def #{key}_columns
-      #     @@#{key}_columns
-      #   end
-
-      #   def #{key}_columns=(cols)
-      #     @@#{key}_columns=cols
-      #   end
-
-      #   def #{key}_options
-      #     @@#{key}_options
-      #   end
-
-      #   def #{key}_options=(opts)
-      #     @@#{key}_options=opts
-      #   end
-      # CLASS_METHODS
-
-      # self.instance_eval(class_methods)
-      # self.send("#{key}_columns=",args)
-      # self.send("#{key}_options=",options)
-
       self.send(:define_singleton_method, "#{key}_columns") do
         self.instance_variable_set("@#{key}_columns", args)
       end

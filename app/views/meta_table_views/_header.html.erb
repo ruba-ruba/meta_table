@@ -12,7 +12,7 @@
       </button>
     <% end %>
     <%= text_field_tag :basic_search, params[:basic_search], :class => 'meta_table_search_input' %>
-    <%= select_tag 'table_view', options_for_select(MetaTable.views_for_controller, params[:table_view]), onchange: "this.form.submit();" %>
+    <%= select_tag 'table_view', options_for_select(MetaTable.views_for_controller, params[:table_view]) %>
   <% end %>
   <div class='clearfix'></div>
 </div>

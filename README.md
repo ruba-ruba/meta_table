@@ -98,16 +98,10 @@ use hash syntax to specify more details
 ```
 
 
-### Current = "0.0.2.alpha"
+### Current = "0.0.3"
 
-### Next = "0.0.3"
-- removed sortable fag. Now all cols which possible are sortable
-- display: false
-- per page choises
-
-#### Plan
-- Add I18n support for labels
-
+### Next = "0.0.4"
+  - Add I18n support for labels
 
 ### License
 
