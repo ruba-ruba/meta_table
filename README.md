@@ -102,6 +102,8 @@ use hash syntax to specify more details
 
 ### Next = "0.0.4"
   - Add I18n support for labels
+  - Add checkboxes as very left columnt (setup false by default)
+  - Add place for custom button to execute action an all checked lines.
 
 ### License
 
