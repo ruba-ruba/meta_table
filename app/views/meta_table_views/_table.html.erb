@@ -8,7 +8,7 @@
   </thead>
   <tbody>
     <% content.collection.each do |record| %>
-      <tr>
+      <tr class= <%= cycle('odd', 'even') %> >
         <% content.current_attributes.each do |attr| %>
           <td><%= MetaTable.implicit_render(record, attr) %></td>
         <% end %>

@@ -3,25 +3,28 @@ PATH
   specs:
     meta_table (0.0.3)
       kaminari (~> 0.16.1)
-      will_paginate (~> 3.0.7)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    actionpack (4.1.6)
-      actionview (= 4.1.6)
-      activesupport (= 4.1.6)
-      rack (~> 1.5.2)
+    actionpack (4.2.1)
+      actionview (= 4.2.1)
+      activesupport (= 4.2.1)
+      rack (~> 1.6)
       rack-test (~> 0.6.2)
-    actionview (4.1.6)
-      activesupport (= 4.1.6)
+      rails-dom-testing (~> 1.0, >= 1.0.5)
+      rails-html-sanitizer (~> 1.0, >= 1.0.1)
+    actionview (4.2.1)
+      activesupport (= 4.2.1)
       builder (~> 3.1)
       erubis (~> 2.7.0)
-    activesupport (4.1.6)
-      i18n (~> 0.6, >= 0.6.9)
+      rails-dom-testing (~> 1.0, >= 1.0.5)
+      rails-html-sanitizer (~> 1.0, >= 1.0.1)
+    activesupport (4.2.1)
+      i18n (~> 0.7)
       json (~> 1.7, >= 1.7.7)
       minitest (~> 5.1)
-      thread_safe (~> 0.1)
+      thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
     builder (3.2.2)
     byebug (3.5.1)
@@ -34,12 +37,17 @@ GEM
     diff-lcs (1.2.5)
     erubis (2.7.0)
     i18n (0.7.0)
-    json (1.8.2)
-    kaminari (0.16.1)
+    json (1.8.3)
+    kaminari (0.16.3)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
+    loofah (2.0.2)
+      nokogiri (>= 1.5.9)
     method_source (0.8.2)
-    minitest (5.6.1)
+    mini_portile (0.6.2)
+    minitest (5.7.0)
+    nokogiri (1.6.6.2)
+      mini_portile (~> 0.6.0)
     pry (0.10.1)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
@@ -47,9 +55,17 @@ GEM
     pry-byebug (3.0.1)
       byebug (~> 3.4)
       pry (~> 0.10)
-    rack (1.5.3)
+    rack (1.6.1)
     rack-test (0.6.3)
       rack (>= 1.0)
+    rails-deprecated_sanitizer (1.0.3)
+      activesupport (>= 4.2.0.alpha)
+    rails-dom-testing (1.0.6)
+      activesupport (>= 4.2.0.beta, < 5.0)
+      nokogiri (~> 1.6.0)
+      rails-deprecated_sanitizer (>= 1.0.1)
+    rails-html-sanitizer (1.0.2)
+      loofah (~> 2.0)
     rspec (3.2.0)
       rspec-core (~> 3.2.0)
       rspec-expectations (~> 3.2.0)
@@ -67,7 +83,6 @@ GEM
     thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    will_paginate (3.0.7)
 
 PLATFORMS
   ruby
@@ -77,3 +92,6 @@ DEPENDENCIES
   pry
   pry-byebug
   rspec (~> 3.2.0)
+
+BUNDLED WITH
+   1.10.3
