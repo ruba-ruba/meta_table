@@ -165,10 +165,19 @@ module MetaTable
     paginated_collection(scoped)
   end
 
+  def self.normalize_current_page scoped
+    page = controller.params[:page] || 1
+    page = page.to_i - 1 if page.to_i > 1 && scoped.page(page).per(per_page).blank? # normalize page
+    page
+  end
+
+  def self.per_page
+    controller.params[:per_page] || per_page_choises.first
+  end
+
   def self.paginated_collection(scoped)
-    page       = controller.params[:page]     || 1
-    per_page   = controller.params[:per_page] || per_page_choises.first
     # useless assigment ???
+    page       = normalize_current_page(scoped)
     collection = scoped.page(page).per(per_page)
   end
 
