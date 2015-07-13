@@ -9,7 +9,6 @@ class MetaTableViewsController < ApplicationController
   end
 
   def edit
-    render template: 'meta_table_views/new'
   end
 
   def create
