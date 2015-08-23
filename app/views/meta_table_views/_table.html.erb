@@ -2,7 +2,12 @@
   <thead>
     <tr>
       <% content.current_attributes.each do |attribute| %>
-        <th> <%= MetaTable.render_header_attribute(attribute) %></th>
+        <th class="<%= attribute[:key] %>">
+          <%= MetaTable.render_header_attribute(attribute) %>
+          <span class="sorting_arrow">
+            <%= sorting_arrow(attribute[:key]) %>
+          </span>
+        </th>
       <% end %>
     </tr>
   </thead>

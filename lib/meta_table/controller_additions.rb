@@ -42,8 +42,17 @@ module MetaTable
       # base.extend         ClassMethods
       base.send :include, InstanceMethods
       base.class_eval do
-        def from_view
+        def sorting_arrow(attribute)
+          if params["sort_by"] && attribute.to_s == params["sort_by"]
+            case params["order"]
+            when 'desc'
+              raw '&#9660;'
+            when 'asc'
+              raw '&#9650;' 
+            end
+          end
         end
+
       end
     end
   end
