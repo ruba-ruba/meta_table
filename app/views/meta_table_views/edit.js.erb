@@ -1,0 +1,8 @@
+$('.edit_meta_table_view').remove();
+$('body').append("<%= j render(:partial => 'meta_table_views/edit') %>");
+
+$(".sortable").sortable();
+$(".sortable").disableSelection();
+
+$('.edit_meta_table_view').hide();
+$(".edit_meta_table_view").dialog();

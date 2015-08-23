@@ -12,13 +12,16 @@
   <%= f.hidden_field :source_class, value: table %>
   <%= f.hidden_field :source_controller, value: key %>
   <%= f.hidden_field :route_back, value: request.referrer %>
-  <%= f.fields_for :table_columns do |tc| %>
-    <% MetaTable.keys_for(key, table).each do |attr| %>
-      <br>
-      <%= attr %>
-      <%= tc.check_box attr, checked: @mtw.enabled_attributes.include?(attr) %>
+  <ul class="sortable">
+    <%= f.fields_for :table_columns do |tc| %>
+      <% MetaTable.keys_for({controller_name: key, table_for: table, mtw: @mtw}).each do |attr| %>
+        <li class="ui-state-default">
+          <%= tc.check_box attr, checked: @mtw.enabled_attributes.include?(attr) %>
+          <%= attr %>
+        </li>
+      <% end %>
     <% end %>
-  <% end %>
+  </div>
   <br/>
   <%= f.submit %>
 <% end %> 

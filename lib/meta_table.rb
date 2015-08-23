@@ -59,8 +59,6 @@ module MetaTable
   end
 
   def self.implicit_render(record, attribute)
-    return record.send(attribute) if attribute.is_a?(Symbol)
-
     if renderer = attribute[:render_text]
       if renderer.is_a?(String) && erb?(renderer)
         controller.make_erb(renderer, record)
@@ -114,7 +112,7 @@ module MetaTable
 
   def self.content
     # {current_attributes: attributes_to_show, collection: collection}
-    attributes = self.attributes_to_show
+    attributes = self.current_attributes
     collection = self.collection
     content = Object.new()
     content.define_singleton_method(:current_attributes) {attributes}
@@ -129,31 +127,44 @@ module MetaTable
   # table content
   # table content
 
-  def self.keys_for(controller_name, table_for)
-    columns = controller_name.constantize.send("#{table_for}_columns")
+  def self.keys_for(params = {})
+    if params[:mtw].is_a?(MetaTableView) && params[:mtw].persisted?
+      return params[:mtw].table_columns.keys.map(&:to_sym)
+    end 
+
+    columns = params[:controller_name].constantize.send("#{params[:table_for]}_columns")
     if columns.any?
       symbols = columns.select { |a| a.is_a? Symbol }
       hashes  = columns.select { |a| a.is_a? Hash }
-      symbols + hashes.map { |h| h[:key] }
+      ary = symbols + hashes.map { |h| h[:key] }
     else
       raise NoAttributesError.new
     end
   end
 
-  def self.attributes_to_show
+  def self.current_attributes
     dynamic_view_attributes || enabled_attributes
+  end
+
+  def self.normalized_attribute(attribute)
+    attribute.is_a?(Hash) ? attribute : {key: attribute}
+  end
+
+  def self.normalized_attributes
+    model_attributes.map{|a| normalized_attribute(a)}
   end
 
   def self.dynamic_view_attributes
     return nil unless mtw = MetaTableView.find_by_id(controller.params[:table_view])
-    model_attributes.select do |a|
-      key = a.is_a?(Hash) ? a[:key] : a
-      mtw.enabled_attributes.include?(key.to_s)
+    selected = []
+    mtw.enabled_attributes.keys.each do |key|
+      selected << normalized_attributes.select{|a| a[:key].to_s == key}
     end
+    selected.flatten
   end
 
   def self.enabled_attributes
-    model_attributes.select { |attr| attr.is_a?(Symbol) || attr[:display] != false }
+    normalized_attributes.select { |attr| attr[:display] != false }
   end
 
   def self.initialize_collection
@@ -204,9 +215,15 @@ module MetaTable
     klass.column_names & searchable_suggested_columns
   end
 
+  def self.order_direction
+    controller.params[:order]
+  end
+
+  def self.order_column
+    controller.params[:sort_by]
+  end
+
   def self.ordering
-    order_column = controller.params[:sort_by]
-    order_direction = controller.params[:order]
     "#{order_column} #{order_direction}" if klass.column_names.include?(order_column) && ['asc', 'desc'].include?(order_direction)
   end
 
@@ -244,23 +261,20 @@ module MetaTable
   end
 
   def self.render_header_attribute(attribute)
-    attr      = attribute.is_a?(Symbol) ? attribute : attribute[:key]
     attr_name = header_attribute_name(attribute)
-    render_table_header_attribute_from_hash(attr, attr_name)
+    render_table_header_attribute_from_hash(attribute, attr_name)
   end
 
-  def self.render_table_header_attribute_from_hash(attr, attr_name)
-    if klass.column_names.include?(attr.to_s)
-      link_to attr_name, format_link_with_sortble(attr), remote: true
+  def self.render_table_header_attribute_from_hash(attribute, attr_name)
+    if klass.column_names.include?(attribute[:key].to_s)
+      link_to attr_name, format_link_with_sortble(attribute[:key]), remote: true
     else
       attr_name
     end
   end
 
   def self.header_attribute_name(attribute)
-    if attribute.is_a?(Symbol)
-      attribute
-    elsif attribute[:label].present?
+    if attribute[:label].present?
       attribute[:label]
     else
       attribute[:key]
