@@ -127,12 +127,16 @@ module MetaTable
   # table content
   # table content
 
-  def self.keys_for(controller_name, table_for)
-    columns = controller_name.constantize.send("#{table_for}_columns")
+  def self.keys_for(params = {})
+    if params[:mtw].is_a?(MetaTableView) && params[:mtw].persisted?
+      return params[:mtw].table_columns.keys.map(&:to_sym)
+    end 
+
+    columns = params[:controller_name].constantize.send("#{params[:table_for]}_columns")
     if columns.any?
       symbols = columns.select { |a| a.is_a? Symbol }
       hashes  = columns.select { |a| a.is_a? Hash }
-      symbols + hashes.map { |h| h[:key] }
+      ary = symbols + hashes.map { |h| h[:key] }
     else
       raise NoAttributesError.new
     end
@@ -152,9 +156,11 @@ module MetaTable
 
   def self.dynamic_view_attributes
     return nil unless mtw = MetaTableView.find_by_id(controller.params[:table_view])
-    normalized_attributes.select do |a|
-      mtw.enabled_attributes.include?(a[:key].to_s)
+    selected = []
+    mtw.enabled_attributes.keys.each do |key|
+      selected << normalized_attributes.select{|a| a[:key].to_s == key}
     end
+    selected.flatten
   end
 
   def self.enabled_attributes
