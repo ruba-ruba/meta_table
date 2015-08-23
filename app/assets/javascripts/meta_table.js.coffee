@@ -1,4 +1,4 @@
 $(document).ready ->
-  $('#table_view').change ->
+  $('#table_view').on 'change', ->
     $('#meta_table_search_form').submit()
-    return
+    false

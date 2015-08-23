@@ -1,2 +1,10 @@
+$(".meta_wrapper > .top_header_wrapper").html("<%= escape_javascript(render partial: '/meta_table_views/header', locals: { header: MetaTable.header } ) %>");
 $(".meta_wrapper > table").html("<%= escape_javascript(render partial: '/meta_table_views/table', locals: { content: MetaTable.content } ) %>");
-$(".table_footer").html("<%= escape_javascript(render partial: '/meta_table_views/footer', locals: { footer: MetaTable.footer, collection: MetaTable.collection } ) %>");
+$(".meta_wrapper .table_footer").html("<%= escape_javascript(render partial: '/meta_table_views/footer', locals: { footer: MetaTable.footer, collection: MetaTable.collection } ) %>");
+  
+
+function rebind_change() {
+  $('#meta_table_search_form').submit();
+}
+
+$('#table_view').change(rebind_change);
