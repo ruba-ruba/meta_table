@@ -9,13 +9,12 @@ require 'erb'
 
 require 'meta_table/shared'
 require 'meta_table/ui_helpers'
+require "meta_table/engine"
 
 require 'kaminari'
 
 module MetaTable
   class NoAttributesError < StandardError
-  end
-  class Engine < ::Rails::Engine
   end
 
   include Shared
@@ -136,7 +135,7 @@ module MetaTable
     if columns.any?
       symbols = columns.select { |a| a.is_a? Symbol }
       hashes  = columns.select { |a| a.is_a? Hash }
-      ary = symbols + hashes.map { |h| h[:key] }
+      symbols + hashes.map { |h| h[:key] }
     else
       raise NoAttributesError.new
     end
