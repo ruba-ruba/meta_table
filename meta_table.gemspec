@@ -17,12 +17,14 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["spec/**/*"]
 
-  s.add_dependency 'kaminari',            '~> 0.16.1'
-  s.add_dependency 'rails',               '>= 3.2', '< 5.0'
+  s.add_dependency 'kaminari',                     '~> 0.16.1'
+  s.add_dependency 'rails',                        '>= 3.2', '< 5.0'
+  s.add_dependency 'jquery-rails',                 '~> 3.1.0'
+  s.add_dependency 'jquery-ui-rails',              '~> 5.0.0'
 
+   
   s.add_development_dependency 'sqlite3'
-
-  s.add_development_dependency "rspec",   '~> 3.3.0'
+  s.add_development_dependency "rspec",            '~> 3.3.0'
   s.add_development_dependency "rspec-nc"
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency 'capybara'

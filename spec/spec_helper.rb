@@ -1,19 +1,25 @@
 ENV['RAILS_ENV'] ||= 'test'
+ENV['RAILS_ROOT'] = File.expand_path("../dummy", __FILE__)
+
+# Create the test app if it doesn't exists
+unless File.exists?(ENV['RAILS_ROOT'])
+  system 'rake setup'
+end
 
 require 'bundler/setup'
 Bundler.setup
 
 require 'meta_table'
 
+require ENV['RAILS_ROOT'] + '/config/environment'
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require 'rspec/rails'
-require 'rspec/autorun'
 require 'factory_girl_rails'
 
 Rails.backtrace_cleaner.remove_silencers!
 
 # Load support files
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
+# Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 
 RSpec.configure do |config|
   config.mock_with :rspec
