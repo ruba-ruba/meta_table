@@ -1,3 +1,7 @@
+MetaTable::Engine.routes.draw do
+end
+
+
 Rails.application.routes.draw do
   get 'meta_table/new' => 'meta_table_views#new', as: :meta_table_views_new
   get 'meta_table/:id/edit' => 'meta_table_views#edit'

@@ -1,11 +1,11 @@
 module MetaTable
   module ControllerAdditions
 
-    def meta_table(key, args, options)
-      MetaTable.preinit_table(key, args, options)
+    def meta_table(key, attributes, options)
+      MetaTable.preinit_table(key, attributes, options)
 
       self.send(:define_singleton_method, "#{key}_columns") do
-        self.instance_variable_set("@#{key}_columns", args)
+        self.instance_variable_set("@#{key}_columns", attributes)
       end
 
       self.send(:define_singleton_method, "#{key}_options") do

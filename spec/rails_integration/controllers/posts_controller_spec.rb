@@ -1,12 +1,22 @@
-# require 'rails'
-# require 'action_controller/railtie'
 require 'rails_helper'
 
- describe PostsController, type: :controller do
-  render_views
+describe PostsController, type: :controller do
 
-  it "works" do
-    get :index
-    expect(response).to be_success
+  context 'load methods' do
+    subject { self.controller }
+
+    it { is_expected.to respond_to(:render_posts_table) }
+
+    it { is_expected.to respond_to(:meta_table) }
+  end
+  
+  context 'render views' do
+    render_views
+    
+    it "has success response" do
+      get :index
+      expect(response).to be_success
+      expect(response.body).to match "clsas='data_table'"
+    end
   end
 end

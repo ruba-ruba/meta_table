@@ -1,3 +1,4 @@
+require "meta_table/engine"
 require 'uri'
 require 'meta_table/version'
 require 'meta_table/railtie'              if defined?(Rails)
@@ -9,7 +10,6 @@ require 'erb'
 
 require 'meta_table/shared'
 require 'meta_table/ui_helpers'
-require "meta_table/engine"
 
 require 'kaminari'
 
@@ -129,7 +129,7 @@ module MetaTable
   def self.keys_for(params = {})
     if params[:mtw].is_a?(MetaTableView) && params[:mtw].persisted?
       return params[:mtw].table_columns.keys.map(&:to_sym)
-    end 
+    end
 
     columns = params[:controller_name].constantize.send("#{params[:table_for]}_columns")
     if columns.any?

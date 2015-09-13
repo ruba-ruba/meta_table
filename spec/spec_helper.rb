@@ -1,6 +1,7 @@
 ENV['RAILS_ENV'] ||= 'test'
 ENV['RAILS_ROOT'] = File.expand_path("../dummy", __FILE__)
 
+
 # Create the test app if it doesn't exists
 unless File.exists?(ENV['RAILS_ROOT'])
   system 'rake setup'
@@ -11,8 +12,11 @@ Bundler.setup
 
 require 'meta_table'
 
-require ENV['RAILS_ROOT'] + '/config/environment'
-require File.expand_path("../dummy/config/environment.rb",  __FILE__)
+#load dummy env 
+# require ENV['RAILS_ROOT'] + '/config/environment'
+require File.expand_path("../../spec/dummy/config/environment.rb",  __FILE__)
+ActiveRecord::Migrator.migrations_paths = [File.expand_path("../../spec/dummy/db/migrate", __FILE__)]
+
 require 'rspec/rails'
 require 'factory_girl_rails'
 
