@@ -126,19 +126,18 @@ module MetaTable
   # table content
   # table content
 
-  def self.keys_for(params = {})
+  def self.keys_for_controller(**params)
     if params[:mtw].is_a?(MetaTableView) && params[:mtw].persisted?
       return params[:mtw].table_columns.keys.map(&:to_sym)
     end
 
-    columns = params[:controller_name].constantize.send("#{params[:table_for]}_columns")
-    if columns.any?
-      symbols = columns.select { |a| a.is_a? Symbol }
-      hashes  = columns.select { |a| a.is_a? Hash }
-      symbols + hashes.map { |h| h[:key] }
-    else
-      raise NoAttributesError.new
-    end
+    columns = 
+      if params[:controller_name]
+        columns = params[:controller_name].constantize.send("#{params[:table_for]}_columns")
+        normalized_attributes(columns).map {|h| h[:key]}
+      end
+
+    columns.blank? ? raise(NoAttributesError.new) : columns
   end
 
   def self.current_attributes
@@ -149,8 +148,11 @@ module MetaTable
     attribute.is_a?(Hash) ? attribute : {key: attribute}
   end
 
-  def self.normalized_attributes
-    model_attributes.map{|a| normalized_attribute(a)}
+  def self.normalized_attributes(attrs_to_normalize = nil)
+    # returns array of attributes
+    # each attribute represented as hash
+    # the minimal set is {key: 'attr_name'}
+    (attrs_to_normalize || model_attributes).map{|a| normalized_attribute(a)}
   end
 
   def self.dynamic_view_attributes

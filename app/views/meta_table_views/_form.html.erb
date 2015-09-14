@@ -14,7 +14,7 @@
   <%= f.hidden_field :route_back, value: request.referrer %>
   <ul class="sortable">
     <%= f.fields_for :table_columns do |tc| %>
-      <% MetaTable.keys_for({controller_name: key, table_for: table, mtw: @mtw}).each do |attr| %>
+      <% MetaTable.keys_for_controller({controller_name: key, table_for: table, mtw: @mtw}).each do |attr| %>
         <li class="ui-state-default">
           <%= tc.check_box attr, checked: @mtw.enabled_attributes.include?(attr) %>
           <%= attr %>
