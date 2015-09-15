@@ -16,7 +16,6 @@ describe PostsController, type: :controller do
     it "has success response" do
       get :index
       expect(response).to be_success
-      expect(response.body).to match "clsas='data_table'"
     end
   end
 end
