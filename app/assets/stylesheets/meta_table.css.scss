@@ -1,5 +1,5 @@
 .meta_wrapper {
-  width: 100%;
+  width:  100%;
   margin: 0;
   .top_header_wrapper{
     outline: 1px solid silver;
@@ -7,34 +7,33 @@
     height: 37px;
     margin: 0;
     button{
-      padding: 0px;
-      margin: 0px;
-      a{
-        color: black;
-      }
+      height:  100%;
+      padding: 10px;
+      margin:  0px;
+      a{ color: black; }
     }
     #meta_table_search_form{
       padding: 0px;
-      margin: 0px;
+      margin:  0px;
+      width:   340px;
       float: right;
-      width: 340px;
       input{
-        width: 150px;
+        width:  150px;
         margin: 0px;
         float: right;
       }
       select{
-        width: 150px;
-        float: right;
+        width:  150px;
         margin: 0px;
+        float: right;
       }
       button.edit_view, button.create_view{
-        width: 20px;
-        height: 37px;
-        margin:0px;
-        padding: 0px;
-        border-right: 1px solid green;
+        width:   20px;
+        height:  37px;
+        margin:  0px;
+        padding: 0px 5px 0 5px;
         float: right;
+        border-right: 1px solid green;
       }
 
     }
@@ -43,7 +42,7 @@
     }
   }
   table{
-    outline: 1px solid silver;
+    border-collapse: collapse;
     width: 100%;
     margin: 0;
     thead{
@@ -55,7 +54,7 @@
     }
     tr {
       td, th {
-        border-left: 1px solid silver
+        border: 1px solid silver;
       }
     }
     tr.even {
