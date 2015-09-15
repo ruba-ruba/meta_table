@@ -1,6 +1,6 @@
 <div class='top_header_wrapper'>
   <button>
-    <a href=<%= header[:link_to_new_record] %>> Create </a>
+    <%= link_to 'Create', {controller: params[:controller], action: :new}%>
   </button>
   <%= form_tag({}, {method: 'get', id: 'meta_table_search_form', remote: true}) do %>
     <%= text_field_tag :basic_search, params[:basic_search], :class => 'meta_table_search_input' %>

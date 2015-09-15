@@ -14,6 +14,7 @@ require 'meta_table/ui_helpers'
 require 'kaminari'
 
 module MetaTable
+  
   class NoAttributesError < StandardError
   end
 
@@ -28,6 +29,8 @@ module MetaTable
   extend ActionView::Helpers::FormOptionsHelper
   extend ActionView::Context
 
+  @@logger = Logger.new(STDOUT)
+  
   mattr_accessor :klass
   mattr_accessor :controller
   mattr_accessor :collection
@@ -85,46 +88,31 @@ module MetaTable
   end
 
   def self.initialize_meta key, controller, attributes, options
+    @@logger.info("_____META_TABLE_INITIALIZE STARTED_____") && time_before = Time.now
     MetaTable.klass            = key.to_s.singularize.camelize.constantize
     MetaTable.controller       = controller
     MetaTable.model_attributes = attributes
     MetaTable.table_options    = options
     MetaTable.collection       = initialize_collection
     render_mtw
+    @@logger.info("_____META_TABLE_RENDERING_TOOK_#{Time.now - time_before}_seconds_____")
   end
 
   def self.render_mtw
-    self.controller.render '/meta_table_views/index', locals: locals
-  end
-
-  def self.locals
-    {header: header, content: content, footer: footer, collection: collection}
-  end
-
-  # table content
-  # table content
-
-  def self.header
-    {link_to_new_record: link_to_new_record}
-    # simple_search_and_filter: simple_search_and_filter
+    self.controller.render '/meta_table_views/index', locals: {content: content}
   end
 
   def self.content
-    # {current_attributes: attributes_to_show, collection: collection}
     attributes = self.current_attributes
     collection = self.collection
+    per_page_choises = self.per_page_choises
+
     content = Object.new()
     content.define_singleton_method(:current_attributes) {attributes}
     content.define_singleton_method(:collection)         {collection}
+    content.define_singleton_method(:per_page_choises)   {per_page_choises}
     content
   end
-
-  def self.footer
-    {per_page_choises: per_page_choises}
-  end
-
-  # table content
-  # table content
 
   def self.keys_for_controller(**params)
     if params[:mtw].is_a?(MetaTableView) && params[:mtw].persisted?
@@ -158,7 +146,7 @@ module MetaTable
   def self.dynamic_view_attributes
     return nil unless mtw = MetaTableView.find_by_id(controller.params[:table_view])
     selected = []
-    mtw.enabled_attributes.keys.each do |key|
+    mtw.enabled_attributes.each_key do |key|
       selected << normalized_attributes.select{|a| a[:key].to_s == key}
     end
     selected.flatten
@@ -230,10 +218,6 @@ module MetaTable
 
   def self.views_for_controller
     [['default', -1]] + MetaTableView.views_for_controller(self.controller.class.to_s)
-  end
-
-  def self.link_to_new_record
-    "#{controller.request.url}/new"
   end
 
   def self.per_page_choise
