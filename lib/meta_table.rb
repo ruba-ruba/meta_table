@@ -119,9 +119,11 @@ module MetaTable
       return params[:mtw].table_columns.keys.map(&:to_sym)
     end
 
+    controller_for_name = (params[:controller_name].presence || params[:mtw].source_controller.presence)
+    model_for_name      = (params[:table_for].presence || params[:mtw].source_class.presence)
     columns = 
-      if params[:controller_name]
-        columns = params[:controller_name].constantize.send("#{params[:table_for]}_columns")
+      if controller_for_name && model_for_name
+        columns = controller_for_name.constantize.send("#{model_for_name}_columns")
         normalized_attributes(columns).map {|h| h[:key]}
       end
 

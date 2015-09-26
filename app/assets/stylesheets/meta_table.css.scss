@@ -89,7 +89,13 @@
 ul.sortable {
   margin-left: 0px;
   li {
+    cursor: pointer;
+    margin-bottom: 2px;
     padding-left: 5px;
     list-style: none;
+    .drag_and_drop_identifier{
+      float:right;
+      margin-right:5px;
+    }
   }
 }

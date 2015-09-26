@@ -107,4 +107,15 @@ use hash syntax to specify more details
 
 ### License
 
+
+### Contributing
+
+- Fork it
+- Create your feature branch (git checkout -b feature)
+- Add some tests.
+- Commit your changes (git commit -am 'Add some feature')
+- Push to the branch (git push origin feature)
+- Create new Pull Request
+
+
 #### This project rocks and uses MIT-LICENSE.

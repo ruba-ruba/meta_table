@@ -39,7 +39,6 @@ module MetaTable
     end
 
     def self.included(base)
-      # base.extend         ClassMethods
       base.send :include, InstanceMethods
       base.class_eval do
         def sorting_arrow(attribute)

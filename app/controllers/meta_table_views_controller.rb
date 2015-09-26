@@ -4,7 +4,6 @@ class MetaTableViewsController < ApplicationController
   before_action :set_mtw, only: [:edit, :update]
 
   def new
-    # binding.pry
     @mtw = MetaTableView.new
   end
 
@@ -46,6 +45,5 @@ class MetaTableViewsController < ApplicationController
 
   def set_mtw
     @mtw = MetaTableView.find params[:id]
-  end
-  
+  end  
 end
